@@ -24,7 +24,7 @@ Retrieves a list of notifications with pagination and sorting options.
 | top        | Maximum number of records to return  | O         | Int?      |
 | sortBy     | Sort field and direction             | O         | String?   |
 
-- Response (`List<Notification>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/notification/Notification.kt)  
+- Response (`List<Notification>`)
   HTTP status: 200
 
 ### Notification Entity Fields
@@ -96,7 +96,7 @@ Marks notifications as read by providing notification IDs.
 |------------|---------------------------------------|-----------|-----------|
 | ids        | Comma-separated notification IDs      | M         | String    |
 
-- Response (`NoContentResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/networking/NoContentResponse.kt)  
+- Response (`NoContentResponse`)
   HTTP status: 200
 
 - Usage

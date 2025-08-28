@@ -24,7 +24,7 @@ Retrieves point transaction logs filtered by month and type with pagination supp
 | type       | Transaction type filter       | M         | String    |
 | lastRowKey | Last row key for pagination   | O         | String?   |
 
-- Response (`List<PointLog>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/point_log/PointLog.kt)  
+- Response (`List<PointLog>`)
   HTTP status: 200
 
 ### PointLog Entity Fields

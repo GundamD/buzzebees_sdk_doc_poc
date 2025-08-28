@@ -20,7 +20,7 @@ Retrieves the current user's complete profile information.
 
 No parameters required.
 
-- Response (`Profile`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/Profile.kt)  
+- Response (`Profile`)
   HTTP status: 200
 
 ### Profile Entity Fields
@@ -206,7 +206,7 @@ Updates user profile information with optional image upload.
 | remark                 | Remarks                   | String?   |
 | displayName            | Display name              | String?   |
 
-- Response (`Profile`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/Profile.kt)  
+- Response (`Profile`)
   HTTP status: 200
 
 - Usage
@@ -300,7 +300,7 @@ Changes the user's password.
 | current    | Current password | M         | String    |
 | change     | New password     | M         | String    |
 
-- Response (`ChangePasswordResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/ChangePasswordResponse.kt)  
+- Response (`ChangePasswordResponse`)
   HTTP status: 200
 
 ### ChangePasswordResponse Entity Fields
@@ -394,7 +394,7 @@ Updates user shipping information.
 | shippingContactNumber   | Shipping contact number    | String?   |
 | shippingEmail           | Shipping email             | String?   |
 
-- Response (`Shipping`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/Shipping.kt)  
+- Response (`Shipping`)
   HTTP status: 200
 
 ### Shipping Entity Fields
@@ -470,7 +470,7 @@ Changes the user's contact number with OTP verification.
 | refCode       | Reference code          | M         | String    |
 | idCard        | National ID card number | O         | String?   |
 
-- Response (`ChangeContactNumberResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/ChangeContactNumberResponse.kt)  
+- Response (`ChangeContactNumberResponse`)
   HTTP status: 200
 
 ### ChangeContactNumberResponse Entity Fields
@@ -556,7 +556,7 @@ Retrieves the user's current point balance.
 
 No parameters required.
 
-- Response (`UpdatedPoints`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/UpdatedPoints.kt)  
+- Response (`UpdatedPoints`)
   HTTP status: 200
 
 ### UpdatedPoints Entity Fields
@@ -599,14 +599,14 @@ Retrieves information about points that will expire.
 
 No parameters required.
 
-- Response (`AllExpiringPoints`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/profile/AllExpiringPoints.kt)  
+- Response (`AllExpiringPoints`)
   HTTP status: 200
 
 ### AllExpiringPoints Entity Fields
 
 | Field Name     | Description             | Data Type            | JSON Field      |
 |----------------|-------------------------|----------------------|-----------------|
-| expiringPoints | List of expiring points | List<ExpiringPoint>? | expiring_points |
+| expiringPoints | List of expiring points | `List<ExpiringPoint>?` | expiring_points |
 
 ### ExpiringPoint Entity Fields
 
@@ -652,7 +652,7 @@ Deletes the user account.
 
 No parameters required.
 
-- Response (`NoContentResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/networking/NoContentResponse.kt)  
+- Response (`NoContentResponse`)
   HTTP status: 200
 
 - Usage

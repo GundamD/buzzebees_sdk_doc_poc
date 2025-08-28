@@ -26,7 +26,7 @@ Retrieves a list of campaign categories with hierarchical structure and optional
 | deviceLocale  | Device locale identifier                     | O         | Int?      |
 | locale        | Locale identifier for content localization   | O         | Int?      |
 
-- Response (`List<Category>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/category/Category.kt)  
+- Response (`List<Category>`)
   HTTP status: 200
 
 ### Category Entity Fields
@@ -40,7 +40,7 @@ Retrieves a list of campaign categories with hierarchical structure and optional
 | detail       | Category detailed description      | String?         | detail       |
 | count        | Number of campaigns in category    | Int?            | count        |
 | imageUrl     | Category image URL                 | String?         | image_url    |
-| subCats      | List of subcategories              | List<Category>? | subcats      |
+| subCats      | List of subcategories              | `List<Category>?` | subcats      |
 
 - Usage
 

@@ -50,7 +50,7 @@ Registers a new user account with comprehensive profile information and marketin
 | phoneMarketing           | Phone marketing preference             | O         | Int?                |
 | options                  | Additional options                     | O         | Map<String, String> |
 
-- Response (`RegisterResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/register/RegisterResponse.kt)  
+- Response (`RegisterResponse`)
   HTTP status: 200
 
 ### RegisterResponse Entity Fields

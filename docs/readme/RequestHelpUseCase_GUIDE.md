@@ -22,7 +22,7 @@ Retrieves a help code that can be used to create new help requests. This code is
 | platform      | Platform type              | M         | String    |
 | clientVersion | Client application version | M         | String    |
 
-- Response (`RequestHelpCode`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/RequestHelpCode.kt)  
+- Response (`RequestHelpCode`)
   HTTP status: 200
 
 ### RequestHelpCode Entity Fields
@@ -66,7 +66,7 @@ Retrieves a paginated list of help requests for a specific request ID.
 | requestId  | Request identifier             | M         | String    |
 | lastRowKey | Key for pagination (next page) | O         | String?   |
 
-- Response (`List<RequestHelp>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/RequestHelp.kt)  
+- Response (`List<RequestHelp>`)
   HTTP status: 200
 
 ### RequestHelp Entity Fields
@@ -130,7 +130,7 @@ Retrieves detailed information for a specific help request using its buzz key.
 |------------|------------------------|-----------|-----------|
 | buzzKey    | Unique help identifier | M         | String    |
 
-- Response (`RequestHelp`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/RequestHelp.kt)  
+- Response (`RequestHelp`)
   HTTP status: 200
 
 - Usage
@@ -171,7 +171,7 @@ Creates a new help request with optional image attachment.
 | message    | Help message content                | M         | String    |
 | image      | Optional image file attachment      | O         | File?     |
 
-- Response (`RequestHelp`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/RequestHelp.kt)  
+- Response (`RequestHelp`)
   HTTP status: 200
 
 - Usage
@@ -219,7 +219,7 @@ Retrieves a paginated list of comments for a specific help request.
 | buzzKey    | Help request identifier        | M         | String    |
 | lastRowKey | Key for pagination (next page) | O         | String?   |
 
-- Response (`List<Comment>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/Comment.kt)  
+- Response (`List<Comment>`)
   HTTP status: 200
 
 ### Comment Entity Fields
@@ -284,7 +284,7 @@ Adds a new comment to a help request with optional image attachment.
 | message    | Comment content                | M         | String    |
 | image      | Optional image file attachment | O         | File?     |
 
-- Response (`Comment`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/Comment.kt)  
+- Response (`Comment`)
   HTTP status: 200
 
 - Usage
@@ -330,7 +330,7 @@ Likes a help request or comment, showing appreciation for the content.
 |------------|----------------------------|-----------|-----------|
 | buzzKey    | Help or comment identifier | M         | String    |
 
-- Response (`LikeForumResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/LikeForumResponse.kt)  
+- Response (`LikeForumResponse`)  
   HTTP status: 200
 
 ### LikeForumResponse Entity Fields
@@ -372,7 +372,7 @@ Unlikes a previously liked help request or comment.
 |------------|----------------------------|-----------|-----------|
 | buzzKey    | Help or comment identifier | M         | String    |
 
-- Response (`LikeForumResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/request_help/LikeForumResponse.kt)  
+- Response (`LikeForumResponse`)
   HTTP status: 200
 
 - Usage

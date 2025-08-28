@@ -23,7 +23,7 @@ Retrieves maintenance status information by URL.
 |------------|--------------------------|-----------|-----------|
 | url        | Maintenance endpoint URL | M         | String    |
 
-- Response (`Maintenance`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/maintenance/Maintenance.kt)  
+- Response (`Maintenance`)
   HTTP status: 200
 
 ### Maintenance Entity Fields
@@ -82,7 +82,7 @@ Retrieves maintenance status information by application ID.
 |------------|------------------------|-----------|-----------|
 | appId      | Application identifier | M         | String    |
 
-- Response (`Maintenance`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/maintenance/Maintenance.kt)  
+- Response (`Maintenance`)
   HTTP status: 200
 
 ### Maintenance Entity Fields

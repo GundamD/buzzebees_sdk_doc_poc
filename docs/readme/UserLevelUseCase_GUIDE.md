@@ -22,7 +22,7 @@ Retrieves user level configurations and information by application ID.
 |------------|------------------------|-----------|-----------|
 | appId      | Application identifier | M         | String    |
 
-- Response (`UserLevelResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/user_level/UserLevelResponse.kt)  
+- Response (`UserLevelResponse`)
   HTTP status: 200
 
 ### UserLevelResponse Entity Fields

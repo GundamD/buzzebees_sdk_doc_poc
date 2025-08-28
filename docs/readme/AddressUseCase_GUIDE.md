@@ -20,7 +20,7 @@ Retrieves a list of all saved addresses for the current user.
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`List<Address>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`List<Address>`)
   HTTP status: 200
 
 > **Address Fields Reference**
@@ -67,7 +67,7 @@ Retrieves detailed information for a specific address using its key.
 |------------|--------------|-----------|-----------|
 | key        | Address key  | M         | String    |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`)
   HTTP status: 200
 
 > **All fields of `Address`** (same as in `getAddressList`)
@@ -109,7 +109,7 @@ Deletes a specific address using its key.
 |------------|--------------|-----------|-----------|
 | key        | Address key  | M         | String    |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`) 
   HTTP status: 200
 
 - Usage
@@ -168,7 +168,7 @@ Updates or creates a new address using the provided form data.
 | zipcode           | Postal code              | O         | String    |
 | isDefault         | Set as default address   | O         | Boolean   |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`)
   HTTP status: 200
 
 - Usage
@@ -249,7 +249,7 @@ Retrieves a list of all saved tax addresses for the current user.
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`List<Address>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`List<Address>`)
   HTTP status: 200
 
 - Usage
@@ -292,7 +292,7 @@ Retrieves detailed information for a specific tax address using its key.
 |------------|------------------|-----------|-----------|
 | key        | Tax address key  | M         | String    |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`)
   HTTP status: 200
 
 - Usage
@@ -354,7 +354,7 @@ In addition to the standard address fields, tax addresses support these addition
 | countryCode   | Country code             | O         | String    |
 | countryName   | Country name             | O         | String    |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`)  
   HTTP status: 200
 
 - Usage
@@ -428,7 +428,7 @@ Deletes a specific tax address using its key.
 |------------|------------------|-----------|-----------|
 | key        | Tax address key  | M         | String    |
 
-- Response (`Address`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address/Address.kt)  
+- Response (`Address`)
   HTTP status: 200
 
 - Usage

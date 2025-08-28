@@ -28,7 +28,7 @@ Retrieves the user's purchase and redemption history with filtering and paginati
 | startDate  | Filter start date (ISO format string)         | O         | String?   |
 | endDate    | Filter end date (ISO format string)           | O         | String?   |
 
-- Response (`List<Purchase>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/history/Purchase.kt)  
+- Response (`List<Purchase>`)
   HTTP status: 200
 
 ### Purchase Entity Fields
@@ -151,7 +151,7 @@ Uses a redeemed campaign or voucher by providing the redemption key.
 |------------|---------------------------------|-----------|-----------|
 | redeemKey  | Unique redemption key from history | M       | String    |
 
-- Response (`UseCampaignResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/history/UseCampaignResponse.kt)  
+- Response (`UseCampaignResponse`)
   HTTP status: 200
 
 ### UseCampaignResponse Entity Fields

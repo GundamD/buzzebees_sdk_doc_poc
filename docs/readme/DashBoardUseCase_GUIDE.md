@@ -24,7 +24,7 @@ Retrieves the main application dashboard with localized content and dashboard it
 | appName    | Application name from Backoffice      | M         | String    |
 | locale     | User language (1054: Thai, 1033: Eng) | M         | Int       |
 
-- Response (`List<Dashboard>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/dashboard/Dashboard.kt)  
+- Response (`List<Dashboard>`)
   HTTP status: 200
 
 ### Dashboard Entity Fields
@@ -34,7 +34,7 @@ Retrieves the main application dashboard with localized content and dashboard it
 | type               | Dashboard item type           | String?          | type               |
 | size               | Dashboard item size           | String?          | size               |
 | menu               | Menu identifier               | String?          | menu               |
-| subCampaignDetails | Nested dashboard items        | List<Dashboard>? | subcampaigndetails |
+| subCampaignDetails | Nested dashboard items        | `List<Dashboard>?` | subcampaigndetails |
 | catHeaderTh        | Category header in Thai       | String?          | cat_header_th      |
 | catHeaderEn        | Category header in English    | String?          | cat_header_en      |
 | id                 | Dashboard item identifier     | String?          | id                 |
@@ -157,7 +157,7 @@ Retrieves a specific sub-dashboard by dashboard name with localized content.
 | dashboardName | Dashboard name from Backoffice        | M         | String    |
 | locale        | User language (1054: Thai, 1033: Eng) | M         | Int       |
 
-- Response (`List<Dashboard>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/dashboard/Dashboard.kt)  
+- Response (`List<Dashboard>`)
   HTTP status: 200
 
 ### Dashboard Entity Fields
@@ -167,7 +167,7 @@ Retrieves a specific sub-dashboard by dashboard name with localized content.
 | type               | Dashboard item type           | String?          | type               |
 | size               | Dashboard item size           | String?          | size               |
 | menu               | Menu identifier               | String?          | menu               |
-| subCampaignDetails | Nested dashboard items        | List<Dashboard>? | subcampaigndetails |
+| subCampaignDetails | Nested dashboard items        | `List<Dashboard>?` | subcampaigndetails |
 | catHeaderTh        | Category header in Thai       | String?          | cat_header_th      |
 | catHeaderEn        | Category header in English    | String?          | cat_header_en      |
 | id                 | Dashboard item identifier     | String?          | id                 |

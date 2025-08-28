@@ -20,7 +20,7 @@ Retrieves a list of all provinces (top-level administrative divisions).
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`List<Province>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address_information/Province.kt)  
+- Response (`List<Province>`)
   HTTP status: 200
 
 > **Province Fields Reference**
@@ -67,7 +67,7 @@ Retrieves a list of districts (second-level administrative divisions) within a s
 |--------------|---------------|-----------|-----------|
 | provinceCode | Province code | M         | String    |
 
-- Response (`List<District>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address_information/District.kt)  
+- Response (`List<District>`) 
   HTTP status: 200
 
 > **District Fields Reference**
@@ -116,7 +116,7 @@ Retrieves a list of sub-districts (third-level administrative divisions) within 
 | provinceCode | Province code | M         | String    |
 | districtCode | District code | M         | String    |
 
-- Response (`List<SubDistrict>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/address_information/SubDistrict.kt)  
+- Response (`List<SubDistrict>`) 
   HTTP status: 200
 
 > **SubDistrict Fields Reference**

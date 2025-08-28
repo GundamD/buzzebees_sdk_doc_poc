@@ -45,7 +45,7 @@ Retrieves a list of campaigns based on various filtering criteria and configurat
 | locationAgencyId | Location agency identifier | O         | String?             |
 | options          | Additional options         | O         | Map<String, String> |
 
-- Response (`List<Campaign>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/Campaign.kt)  
+- Response (`List<Campaign>`)
   HTTP status: 200
 
 ### Campaign Entity Fields
@@ -189,7 +189,7 @@ Retrieves detailed information for a specific campaign.
 | deviceLocale | Device locale       | O         | Int?                |
 | options      | Additional options  | O         | Map<String, String> |
 
-- Response (`CampaignDetails`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/CampaignDetails.kt)  
+- Response (`CampaignDetails`)
   HTTP status: 200
 
 ### CampaignDetails Entity Fields
@@ -242,14 +242,14 @@ Retrieves detailed information for a specific campaign.
 | pointType               | Type of points (coins, stamps)   | String?            | PointType               |
 | defaultPrivilegeMessage | Default privilege message        | String?            | DefaultPrivilegeMessage |
 | isNotAutoUse            | Not auto-use flag                | Boolean?           | IsNotAutoUse            |
-| pictures                | Campaign image gallery           | List<Picture>?     | Pictures                |
+| pictures                | Campaign image gallery           | `List<Picture>?`     | Pictures                |
 | isConditionPass         | User meets campaign conditions   | Boolean?           | IsConditionPass         |
 | conditionAlertId        | Condition alert identifier       | Int?               | ConditionAlertId        |
 | qty                     | Available quantity               | Double?            | Qty                     |
 | fullImageUrl            | Full campaign image URL          | String?            | FullImageUrl            |
 | subCampaignStyles       | Sub-campaign style configuration | SubCampaignStyle?  | SubCampaignStyles       |
-| subCampaigns            | List of sub-campaigns            | List<SubCampaign>? | SubCampaigns            |
-| related                 | Related campaigns                | List<Campaign>?    | Related                 |
+| subCampaigns            | List of sub-campaigns            | `List<SubCampaign>?` | SubCampaigns            |
+| related                 | Related campaigns                | `List<Campaign>?`    | Related                 |
 | isFavourite             | User marked as favorite          | Boolean?           | IsFavourite             |
 
 ### Picture Entity Fields
@@ -268,7 +268,7 @@ Retrieves detailed information for a specific campaign.
 
 | Field Name       | Description                 | Data Type         | JSON Field       |
 |------------------|-----------------------------|-------------------|------------------|
-| styles           | List of style options       | ArrayList<Style>? | styles           |
+| styles           | List of style options       | `ArrayList<Style>?` | styles           |
 | masterCampaignId | Master campaign identifier  | String?           | masterCampaignId |
 | isHasStyle       | Has style options available | Boolean?          | hasStyle         |
 
@@ -278,7 +278,7 @@ Retrieves detailed information for a specific campaign.
 |---------------|----------------------------|---------------------|---------------|
 | value         | Style value                | String?             | value         |
 | points        | Points required            | Double?             | points        |
-| subitems      | List of sub-items          | ArrayList<SubItem>? | subitems      |
+| subitems      | List of sub-items          | `ArrayList<SubItem>?` | subitems      |
 | price         | Style price                | Double?             | price         |
 | campaignId    | Campaign identifier        | String?             | campaignId    |
 | name          | Style name                 | String?             | name          |
@@ -355,7 +355,7 @@ Retrieves a list of campaigns marked as favorites by the user.
 | locale     | Locale identifier         | O         | Int?                |
 | options    | Additional options        | O         | Map<String, String> |
 
-- Response (`List<Campaign>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/Campaign.kt)  
+- Response (`List<Campaign>`)
   HTTP status: 200
 
 > **Campaign Fields Reference**
@@ -405,7 +405,7 @@ Adds a campaign to the user's favorites list.
 |------------|---------------------|-----------|-----------|
 | id         | Campaign identifier | M         | String    |
 
-- Response (`FavoriteResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/FavoriteResponse.kt)  
+- Response (`FavoriteResponse`)
   HTTP status: 200
 
 ### FavoriteResponse Entity Fields
@@ -452,7 +452,7 @@ Removes a campaign from the user's favorites list.
 |------------|---------------------|-----------|-----------|
 | id         | Campaign identifier | M         | String    |
 
-- Response (`FavoriteResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/FavoriteResponse.kt)  
+- Response (`FavoriteResponse`)
   HTTP status: 200
 
 ### FavoriteResponse Entity Fields
@@ -500,7 +500,7 @@ Redeems a campaign offer using user points or other redemption methods.
 | id         | Campaign identifier | M         | String              |
 | options    | Additional options  | O         | Map<String, String> |
 
-- Response (`RedeemResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/RedeemResponse.kt)  
+- Response (`RedeemResponse`)
   HTTP status: 200
 
 ### RedeemResponse Entity Fields
@@ -534,13 +534,13 @@ Redeems a campaign offer using user points or other redemption methods.
 | privilegeMessageEN     | Privilege message in English   | String?               | PrivilegeMessageEN     |
 | privilegeMessageFormat | Privilege message format       | String?               | PrivilegeMessageFormat |
 | buzzebees              | Buzzebees trace information    | Buzzebees?            | buzzebees              |
-| result                 | Nested redemption results      | List<RedeemResponse>? | Result                 |
+| result                 | Nested redemption results      | `List<RedeemResponse>?` | Result                 |
 
 ### Buzzebees Entity Fields
 
 | Field Name | Description          | Data Type    | JSON Field |
 |------------|----------------------|--------------|------------|
-| traces     | List of trace events | List<Trace>? | traces     |
+| traces     | List of trace events | `List<Trace>?` | traces     |
 
 ### Trace Entity Fields
 
@@ -672,7 +672,7 @@ Redeems a campaign with specified quantity, typically used for lottery or draw-b
 | quantity   | Redemption quantity | M         | String              |
 | options    | Additional options  | O         | Map<String, String> |
 
-- Response (`RedeemResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/RedeemResponse.kt)  
+- Response (`RedeemResponse`)
   HTTP status: 200
 
 > **RedeemResponse Fields Reference**
@@ -739,7 +739,7 @@ Retrieves reviews and ratings for a specific campaign with pagination support.
 | campaignId | Campaign identifier         | M         | String    |
 | lastRowKey | Last row key for pagination | O         | String?   |
 
-- Response (`List<Review>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/Review.kt)  
+- Response (`List<Review>`)
   HTTP status: 200
 
 ### Review Entity Fields
@@ -820,7 +820,7 @@ Posts a review for a campaign with optional image attachment.
 | message    | Review message      | M         | String    |
 | image      | Optional image file | O         | File?     |
 
-- Response (`Review`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/Review.kt)  
+- Response (`Review`) 
   HTTP status: 200
 
 ### Review Entity Fields
@@ -1069,4 +1069,4 @@ applications with full campaign lifecycle management.
 
 All methods are available in both suspend (coroutine) and callback versions for flexible integration
 with different architectural patterns. The consistent error handling and response validation ensure
-reliable operation across all campaign operations.
+reliable operation across all campaign operations

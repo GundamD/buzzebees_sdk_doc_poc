@@ -22,7 +22,7 @@ Retrieves location information based on the provided zip code.
 |------------|---------------------------------|-----------|-----------|
 | zipCode    | Postal/ZIP code to lookup       | M         | String    |
 
-- Response (`List<Zipcode>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/zip_code/Zipcode.kt)  
+- Response (`List<Zipcode>`)
   HTTP status: 200
 
 ### Zipcode Entity Fields

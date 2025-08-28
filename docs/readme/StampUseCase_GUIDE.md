@@ -26,7 +26,7 @@ Creates a new digital stamp card for a user with specified device and issuer inf
 | os         | Operating system        | M         | String    |
 | platform   | Platform type           | M         | String    |
 
-- Response (`CreateStampResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/stamp/CreateStampResponse.kt)  
+- Response (`CreateStampResponse`)
   HTTP status: 200
 
 ### CreateStampResponse Entity Fields
@@ -86,7 +86,7 @@ Retrieves a list of all stamp cards associated with the current user.
 
 No parameters required.
 
-- Response (`List<Stamp>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/stamp/Stamp.kt)  
+- Response (`List<Stamp>`)
   HTTP status: 200
 
 ### Stamp Entity Fields
@@ -154,7 +154,7 @@ related promotions.
 | stampId    | Stamp identifier | M         | String    |
 | cardId     | Card identifier  | M         | String    |
 
-- Response (`StampProfileResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/stamp/StampProfileResponse.kt)  
+- Response (`StampProfileResponse`)
   HTTP status: 200
 
 ### StampProfileResponse Entity Fields
@@ -173,9 +173,9 @@ related promotions.
 | expireDate      | Expiration date timestamp  | Long?                | expireDate      |
 | pricePerStamp   | Price per stamp            | Double?              | pricePerStamp   |
 | otherPromotions | Other available promotions | Any?                 | otherPromotions |
-| otherStamps     | Related stamp cards        | List<Stamp>?         | otherStamps     |
-| campaigns       | Available campaigns        | List<StampCampaign>? | campaigns       |
-| history         | Stamp usage history        | List<StampHistory>?  | history         |
+| otherStamps     | Related stamp cards        | `List<Stamp>?`         | otherStamps     |
+| campaigns       | Available campaigns        | `List<StampCampaign>?` | campaigns       |
+| history         | Stamp usage history        | `List<StampHistory>?`  | history         |
 
 ### StampCampaign Entity Fields
 

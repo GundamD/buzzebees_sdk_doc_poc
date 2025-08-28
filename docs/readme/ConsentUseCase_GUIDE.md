@@ -37,7 +37,7 @@ Updates user consent preferences for various marketing channels and policy versi
 | consentAge              | User age for consent validation                 | O         | Int?                |
 | options                 | Additional consent options                      | O         | Map<String, String> |
 
-- Response (`Consent`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/consent/Consent.kt)  
+- Response (`Consent`)
   HTTP status: 200
 
 ### Consent Entity Fields
@@ -120,7 +120,7 @@ Retrieves the current user consent status and preferences.
 
 No parameters required.
 
-- Response (`Consent`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/consent/Consent.kt)  
+- Response (`Consent`)
   HTTP status: 200
 
 ### Consent Entity Fields
@@ -199,7 +199,7 @@ Revokes all user consent and opt-outs from all marketing communications.
 
 No parameters required.
 
-- Response (`Consent`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/consent/Consent.kt)  
+- Response (`Consent`)
   HTTP status: 200
 
 ### Consent Entity Fields

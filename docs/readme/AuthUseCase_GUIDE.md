@@ -19,7 +19,7 @@ val auth = BuzzebeesSDK.instance().auth
 |------------|---------------------------------------------------|-----------|-----------|
 | -          | None. SDK supplies device/app info automatically. | -         | -         |
 
-- Response (`LoginResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response (`LoginResponse`)
   HTTP status: 200
 
 > **All fields of `LoginResponse`**
@@ -36,7 +36,7 @@ val auth = BuzzebeesSDK.instance().auth
 | locale                          | Language code (e.g., 1054/1033) | O         | Int                  |
 | userLevel                       | User level                      | O         | Int                  |
 | userLevelDetail                 | Level detail                    | O         | String               |
-| userFlags                       | User flags                      | O         | Array<String>        |
+| userFlags                       | User flags                      | O         | `Array<String>`        |
 | sponsorId                       | Sponsor id                      | O         | Int                  |
 | canRedeem                       | Redeem eligibility              | O         | Boolean              |
 | uuid                            | Device/user uuid                | O         | String               |
@@ -46,7 +46,7 @@ val auth = BuzzebeesSDK.instance().auth
 | detail.ewalletToken             | E-Wallet token                  | O         | String               |
 | cartCount                       | Cart items count                | O         | Int                  |
 | platform                        | Platform name                   | O         | String               |
-| topics                          | Topics subscribed               | O         | Array<String>        |
+| topics                          | Topics subscribed               | O         | `Array<String>`       |
 | channel                         | Channel (device/facebook/web)   | O         | String               |
 | TermAndCondition                | Terms & Conditions consent      | O         | Int                  |
 | DataPrivacy                     | Data Privacy consent            | O         | Int                  |
@@ -97,6 +97,7 @@ val auth = BuzzebeesSDK.instance().auth
 - Usage
 
 ```kotlin
+
 // Suspend
 val result = auth.deviceLoginSuspend()
 
@@ -117,6 +118,7 @@ auth.loginDevice { result ->
         }
     }
 }
+
 ```
 
 ---
@@ -130,8 +132,7 @@ auth.loginDevice { result ->
 | username   | Username/email | M         | String    |
 | password   | Password       | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin` above)
@@ -218,8 +219,7 @@ auth.loginUsernamePassword(username, password) { result ->
 |-------------|-----------------------|-----------|-----------|
 | accessToken | Facebook access token | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -259,8 +259,7 @@ Note: No prior token required.
 |-------------|---------------------------------|-----------|-----------|
 | accessToken | Link with Facebook access token | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -300,8 +299,7 @@ Note: Requires existing auth token (SDK adds it to headers automatically).
 |------------|-----------------|-----------|-----------|
 | idToken    | Google ID token | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -341,8 +339,7 @@ Note: No prior token required.
 |------------|---------------------------|-----------|-----------|
 | idToken    | Link with Google ID token | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -383,8 +380,7 @@ Note: Requires existing auth token (SDK adds it to headers automatically).
 | lineAccessToken | LINE access token | M         | String    |
 | lineIdToken     | LINE ID token     | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -425,8 +421,7 @@ Note: No prior token required.
 | lineAccessToken | Link with LINE access token | M         | String    |
 | lineIdToken     | Link with LINE ID token     | M         | String    |
 
-- Response:
-  LoginResponse [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/LoginResponse.kt)  
+- Response: LoginResponse
   HTTP status: 200
 
 > **All fields of `LoginResponse`** (same as in `deviceLogin`)
@@ -503,7 +498,7 @@ auth.logout { result ->
 |------------|---------------|-----------|-----------|
 | email      | Account email | M         | String    |
 
-- Response (`StatusResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/StatusResponse.kt)  
+- Response (`StatusResponse`)
   HTTP status: 200
 
 | Field Name | Description             | Mandatory | Data Type |
@@ -542,7 +537,7 @@ auth.forgotPassword("user@example.com") { result ->
 | refCode     | Reference code from OTP | M         | String    |
 | newPassword | New password            | M         | String    |
 
-- Response (`StatusResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/login/StatusResponse.kt)  
+- Response (`StatusResponse`)
   HTTP status: 200
 
 | Field Name | Description             | Mandatory | Data Type |
@@ -585,7 +580,7 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 | appId         | Application id       | M         | String    |
 | contactNumber | Phone number (E.164) | M         | String    |
 
-- Response [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/otp/OtpResponse.kt)  
+- Response `OtpResponse`
   HTTP status: 200
 
 | Field Name | Description                     | Mandatory | Data Type |
@@ -671,9 +666,8 @@ auth.getOtp(uuid, appId, contactNumber) { result ->
 | refCode       | Ref code from getOtp | M         | String    |
 | contactNumber | Phone number (E.164) | M         | String    |
 
--
-Response [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/otp/ConfirmOtpResponse.kt)  
-HTTP status: 200
+- Response `ConfirmOtpResponse`
+  HTTP status: 200
 
 | Field Name | Description           | Mandatory | Data Type |
 |------------|-----------------------|-----------|-----------|
@@ -752,7 +746,7 @@ auth.confirmOtp(otp, refCode, contactNumber) { result ->
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`ResumeResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/device_auth/ResumeResponse.kt)  
+- Response (`ResumeResponse`)  
   HTTP status: 200
 
 | Field Name      | Description           | Mandatory | Data Type |
@@ -839,7 +833,7 @@ auth.updateDevice { result ->
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`Version`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/device_auth/Version.kt)  
+- Response (`Version`)
   HTTP status: 200
 
 | Field Name       | Description                  | Mandatory | Data Type |

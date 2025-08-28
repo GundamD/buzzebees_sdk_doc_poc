@@ -21,7 +21,7 @@ Generates a time-sensitive stamp code that can be used for stamp collection acti
 | macAddress  | Device MAC address (optional)  | O         | String?   |
 | cardId      | Stamp card identifier          | M         | String    |
 
-- Response (`StampCode`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/stamp/StampCode.kt)  
+- Response (`StampCode`
   HTTP status: 200
 
 ### StampCode Entity Fields
@@ -88,7 +88,7 @@ Generates a time-sensitive earning code that can be used to earn rewards, points
 | deviceAppId  | Device application ID (optional)| O         | String?   |
 | agencyId     | Agency identifier               | M         | String    |
 
-- Response (`EarnCode`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/stamp/EarnCode.kt)  
+- Response (`EarnCode`) 
   HTTP status: 200
 
 ### EarnCode Entity Fields

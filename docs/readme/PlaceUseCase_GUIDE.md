@@ -30,7 +30,7 @@ Retrieves a list of places based on search criteria and location filters.
 | requiredCampaign | Require active campaign              | O         | Boolean   |
 | keyword          | Search keyword                       | O         | String?   |
 
-- Response (`List<Place>`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/place/Place.kt)  
+- Response (`List<Place>`)
   HTTP status: 200
 
 ### Place Entity Fields
@@ -57,7 +57,7 @@ Retrieves a list of places based on search criteria and location filters.
 | region           | Region information                   | String?        | region            |
 | category         | Place category                       | String?        | Category          |
 | expert           | Expert information                   | String?        | expert            |
-| services         | List of available services           | List<Services>?| services          |
+| services         | List of available services           | `List<Services>?`| services          |
 | subDistrictCode  | Sub-district code                    | Int?           | subdistrict_code  |
 | districtCode     | District code                        | Int?           | district_code     |
 | provinceCode     | Province code                        | Int?           | province_code     |
@@ -135,7 +135,7 @@ Retrieves detailed information about a specific place.
 | id         | Place unique identifier         | M         | String    |
 | center     | Center coordinates (lat,lng)    | M         | String    |
 
-- Response (`Place`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/place/Place.kt)  
+- Response (`Place`)
   HTTP status: 200
 
 ### Place Entity Fields
@@ -162,7 +162,7 @@ Retrieves detailed information about a specific place.
 | region           | Region information                   | String?        | region            |
 | category         | Place category                       | String?        | Category          |
 | expert           | Expert information                   | String?        | expert            |
-| services         | List of available services           | List<Services>?| services          |
+| services         | List of available services           | `List<Services>?`| services          |
 | subDistrictCode  | Sub-district code                    | Int?           | subdistrict_code  |
 | districtCode     | District code                        | Int?           | district_code     |
 | provinceCode     | Province code                        | Int?           | province_code     |

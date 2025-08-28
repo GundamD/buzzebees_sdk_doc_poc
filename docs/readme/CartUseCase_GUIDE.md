@@ -26,7 +26,7 @@ Adds a campaign item to the user's shopping cart with specified parameters.
 | qty              | Quantity to add                     | M         | String    |
 | sideCampaignJson | Side campaign configuration in JSON | M         | String    |
 
-- Response (`CartCountResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/cart/CartCountResponse.kt)  
+- Response (`CartCountResponse`)
   HTTP status: 200
 
 ### CartCountResponse Entity Fields
@@ -91,7 +91,7 @@ Retrieves the total number of items currently in the user's shopping cart.
 
 No parameters required.
 
-- Response (`CartCountResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/cart/CartCountResponse.kt)  
+- Response (`CartCountResponse`)
   HTTP status: 200
 
 ### CartCountResponse Entity Fields
@@ -143,7 +143,7 @@ Retrieves an access token for cart operations using provided configuration data.
 |------------|-----------------------------------|-----------|-----------|
 | dataJson   | Configuration data in JSON format | M         | String    |
 
-- Response (`AccessToken`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/cart/AccessToken.kt)  
+- Response (`AccessToken`)
   HTTP status: 200
 
 ### AccessToken Entity Fields

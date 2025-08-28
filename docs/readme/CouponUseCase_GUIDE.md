@@ -23,7 +23,7 @@ Processes and validates coupon codes, returning detailed status information and 
 |------------|----------------------------------------|-----------|-----------|
 | codes      | Comma-separated string of coupon codes | M         | String    |
 
-- Response (`ProcessCouponResponse`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/coupon/ProcessCouponResponse.kt)  
+- Response (`ProcessCouponResponse`)
   HTTP status: 200
 
 ### ProcessCouponResponse Entity Fields
