@@ -65,7 +65,7 @@ plugins {
 
 dependencies {
     // Add Buzzebees SDK dependency
-    implementation("com.buzzebees.sdk:buzzebees_sdk:1.0.0")
+    implementation("com.buzzebees.sdk:buzzebees-sdk:1.0.0")
 
     // Your other dependencies...
 }
