@@ -24,6 +24,13 @@ Retrieves a list of notifications with pagination and sorting options.
 | top        | Maximum number of records to return  | O         | Int?      |
 | sortBy     | Sort field and direction             | O         | String?   |
 
+#### sortBy Options
+
+| Value             | Description                        |
+|-------------------|------------------------------------|
+| createdate_asc    | Sort by creation date (oldest first) |
+| createdate_desc   | Sort by creation date (newest first) |
+
 - Response (`List<Notification>`)
   HTTP status: 200
 

@@ -576,8 +576,6 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 
 | Field Name    | Description          | Mandatory | Data Type |
 |---------------|----------------------|-----------|-----------|
-| uuid          | Device/User uuid     | M         | String    |
-| appId         | Application id       | M         | String    |
 | contactNumber | Phone number (E.164) | M         | String    |
 
 - Response `OtpResponse`
@@ -590,18 +588,10 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 
 ```kotlin
 // Suspend
-val result = auth.getOtp(
-    uuid = "device-uuid",
-    appId = "app-id",
-    contactNumber = "+66900000000"
-)
+val result = auth.getOtp("+66900000000")
 
 // Callback
-auth.getOtp(
-    uuid = "device-uuid",
-    appId = "app-id",
-    contactNumber = "+66900000000"
-) { result ->
+auth.getOtp("+66900000000") { result ->
     when (result) {
         is AuthResult.SuccessGetOTP -> {
             // Handle successful OTP request
@@ -629,7 +619,7 @@ auth.getOtp(
 #### Implementation Example
 
 ```kotlin
-auth.getOtp(uuid, appId, contactNumber) { result ->
+auth.getOtp(contactNumber) { result ->
     when (result) {
         is AuthResult.SuccessGetOTP -> {
             // Handle successful OTP request

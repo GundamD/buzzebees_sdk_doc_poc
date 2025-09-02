@@ -20,7 +20,7 @@ Retrieves user level configurations and information by application ID.
 
 | Field Name | Description            | Mandatory | Data Type |
 |------------|------------------------|-----------|-----------|
-| appId      | Application identifier | M         | String    |
+| -          | None. SDK supplies application info automatically. | -         | -         |
 
 - Response (`UserLevelResponse`)
   HTTP status: 200
@@ -52,10 +52,10 @@ Retrieves user level configurations and information by application ID.
 
 ```kotlin
 // Suspend
-val result = userLevelService.getLevels("my_app_id")
+val result = userLevelService.getLevels()
 
 // Callback
-userLevelService.getLevels("my_app_id") { result ->
+userLevelService.getLevels() { result ->
     when (result) {
         is UserLevelResult.Success -> {
             // Handle successful user level retrieval

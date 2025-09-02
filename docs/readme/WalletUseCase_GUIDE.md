@@ -18,7 +18,6 @@ Generates a time-sensitive stamp code that can be used for stamp collection acti
 
 | Field Name  | Description                    | Mandatory | Data Type |
 |-------------|--------------------------------|-----------|-----------|
-| macAddress  | Device MAC address (optional)  | O         | String?   |
 | cardId      | Stamp card identifier          | M         | String    |
 
 - Response (`StampCode`
@@ -37,13 +36,10 @@ Generates a time-sensitive stamp code that can be used for stamp collection acti
 
 ```kotlin
 // Suspend
-val result = walletService.getStampCode(
-    macAddress = "AA:BB:CC:DD:EE:FF",
-    cardId = "card_12345"
-)
+val result = walletService.getStampCode("card_12345")
 
 // Callback
-walletService.getStampCode("AA:BB:CC:DD:EE:FF", "card_12345") { result ->
+walletService.getStampCode("card_12345") { result ->
     when (result) {
         is WalletResult.SuccessStampCode -> {
             // Handle successful stamp code generation
@@ -84,8 +80,6 @@ Generates a time-sensitive earning code that can be used to earn rewards, points
 
 | Field Name   | Description                     | Mandatory | Data Type |
 |--------------|---------------------------------|-----------|-----------|
-| macAddress   | Device MAC address (optional)   | O         | String?   |
-| deviceAppId  | Device application ID (optional)| O         | String?   |
 | agencyId     | Agency identifier               | M         | String    |
 
 - Response (`EarnCode`) 
@@ -104,14 +98,10 @@ Generates a time-sensitive earning code that can be used to earn rewards, points
 
 ```kotlin
 // Suspend
-val result = walletService.earnCode(
-    macAddress = "AA:BB:CC:DD:EE:FF",
-    deviceAppId = "app_54321",
-    agencyId = "agency_789"
-)
+val result = walletService.earnCode("agency_789")
 
 // Callback
-walletService.earnCode("AA:BB:CC:DD:EE:FF", "app_54321", "agency_789") { result ->
+walletService.earnCode("agency_789") { result ->
     when (result) {
         is WalletResult.SuccessEarnCode -> {
             // Handle successful earning code generation

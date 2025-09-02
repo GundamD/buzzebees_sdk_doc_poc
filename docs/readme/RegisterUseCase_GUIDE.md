@@ -20,12 +20,6 @@ Registers a new user account with comprehensive profile information and marketin
 
 | Field Name               | Description                            | Mandatory | Data Type           |
 |--------------------------|----------------------------------------|-----------|---------------------|
-| appId                    | Application identifier                 | M         | String              |
-| uuid                     | Device UUID                            | M         | String              |
-| macAddress               | Device MAC address                     | M         | String              |
-| os                       | Operating system                       | M         | String              |
-| platform                 | Platform type                          | M         | String              |
-| clientVersion            | Client application version             | M         | String              |
 | deviceNotificationEnable | Device notification enabled flag       | M         | Boolean             |
 | username                 | Username for login                     | M         | String              |
 | password                 | User password                          | M         | String              |
@@ -77,12 +71,6 @@ Registers a new user account with comprehensive profile information and marketin
 ```kotlin
 // Create registration form
 val registerForm = RegisterForm(
-    appId = "my_app_id",
-    uuid = "device_uuid_12345",
-    macAddress = "AA:BB:CC:DD:EE:FF",
-    os = "Android",
-    platform = "mobile",
-    clientVersion = "1.0.0",
     deviceNotificationEnable = true,
     username = "john_doe",
     password = "securePassword123",

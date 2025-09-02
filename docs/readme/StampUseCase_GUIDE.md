@@ -21,10 +21,7 @@ Creates a new digital stamp card for a user with specified device and issuer inf
 
 | Field Name | Description             | Mandatory | Data Type |
 |------------|-------------------------|-----------|-----------|
-| imei       | Device IMEI identifier  | M         | String    |
 | issuer     | Stamp issuer identifier | M         | String    |
-| os         | Operating system        | M         | String    |
-| platform   | Platform type           | M         | String    |
 
 - Response (`CreateStampResponse`)
   HTTP status: 200
@@ -47,15 +44,10 @@ Creates a new digital stamp card for a user with specified device and issuer inf
 
 ```kotlin
 // Suspend
-val result = stampService.createStamp(
-    imei = "123456789012345",
-    issuer = "coffee_shop_xyz",
-    os = "Android",
-    platform = "mobile"
-)
+val result = stampService.createStamp("coffee_shop_xyz")
 
 // Callback
-stampService.createStamp("123456789012345", "coffee_shop_xyz", "Android", "mobile") { result ->
+stampService.createStamp("coffee_shop_xyz") { result ->
     when (result) {
         is StampResult.SuccessCreate -> {
             // Handle successful stamp creation

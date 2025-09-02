@@ -72,7 +72,7 @@ maintenanceService.getMaintenance("https://api.example.com/maintenance") { resul
 
 ---
 
-### getMaintenanceWithAppId
+### getMaintenance
 
 Retrieves maintenance status information by application ID.
 
@@ -80,7 +80,7 @@ Retrieves maintenance status information by application ID.
 
 | Field Name | Description            | Mandatory | Data Type |
 |------------|------------------------|-----------|-----------|
-| appId      | Application identifier | M         | String    |
+| -          | None. SDK supplies application info automatically. | -         | -         |
 
 - Response (`Maintenance`)
   HTTP status: 200
@@ -102,10 +102,10 @@ Retrieves maintenance status information by application ID.
 
 ```kotlin
 // Suspend
-val result = maintenanceService.getMaintenanceWithAppId("my_app_id")
+val result = maintenanceService.getMaintenance()
 
 // Callback
-maintenanceService.getMaintenanceWithAppId("my_app_id") { result ->
+maintenanceService.getMaintenance() { result ->
     when (result) {
         is MaintenanceResult.Success -> {
             // Handle successful maintenance info retrieval

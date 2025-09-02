@@ -18,9 +18,7 @@ Retrieves a help code that can be used to create new help requests. This code is
 
 | Field Name    | Description                | Mandatory | Data Type |
 |---------------|----------------------------|-----------|-----------|
-| os            | Operating system           | M         | String    |
-| platform      | Platform type              | M         | String    |
-| clientVersion | Client application version | M         | String    |
+| -          | None. SDK supplies device/app info automatically. | -         | -         |
 
 - Response (`RequestHelpCode`)
   HTTP status: 200
@@ -35,10 +33,10 @@ Retrieves a help code that can be used to create new help requests. This code is
 
 ```kotlin
 // Suspend
-val result = requestHelpService.getHelpCode("Android", "mobile", "1.0.0")
+val result = requestHelpService.getHelpCode()
 
 // Callback
-requestHelpService.getHelpCode("Android", "mobile", "1.0.0") { result ->
+requestHelpService.getHelpCode() { result ->
     when (result) {
         is RequestHelpResult.SuccessHelpCode -> {
             // Handle successful help code retrieval
