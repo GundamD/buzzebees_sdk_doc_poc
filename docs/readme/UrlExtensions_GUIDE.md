@@ -63,10 +63,11 @@ val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options
 val shoppingCartResult = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
 val defaultCartResult = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
 
-// Cart-specific URLs (with existing access token)
-val cartUrl = BuzzebeesSDK.instance().buildCartUrl(accessToken)
-val myOrderUrl = BuzzebeesSDK.instance().buildMyOrderUrl(accessToken)
-val voucherUrl = BuzzebeesSDK.instance().buildVoucherUrl(accessToken)
+// Cart URLs using flexible builder with different paths
+val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken) // Root page
+val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/myorder")
+val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/voucher")
+val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/settings")
 ```
 
 ---
@@ -228,100 +229,96 @@ val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl(
 )
 ```
 
-#### 5.3. Cart-Specific URL Builders
+#### 5.3. Flexible Cart URL Builder
 
-These functions build specific cart page URLs using an existing access token and SDK configuration.
+**Function**: `buildFlexibleCartUrl(accessToken: String, path: String? = null, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
 
-**Cart URL**: `buildCartUrl(accessToken: String, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
+Builds cart URLs with custom paths and parameters. This is the main function for building all cart-related URLs.
 
-**My Order URL**: `buildMyOrderUrl(accessToken: String, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
-
-**Voucher URL**: `buildVoucherUrl(accessToken: String, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
-
-**Parameters** (all functions):
-- `accessToken`: Pre-existing access token for authentication
-- `additionalParams`: Optional additional URL parameters
+**Parameters**:
+- `accessToken`: Access token for authentication
+- `path`: Optional additional path (e.g., "/myorder", "/voucher", "/settings", "/profile")
+- `additionalParams`: Optional additional parameters
 - `appName`: Optional custom app name (uses SDK config if null)
 - `baseCartUrl`: Optional custom base URL (uses SDK config if null)
 
 **Examples**:
 ```kotlin
-// Basic usage (uses SDK config for app name and base URL)
-val cartUrl = BuzzebeesSDK.instance().buildCartUrl(accessToken)
-val myOrderUrl = BuzzebeesSDK.instance().buildMyOrderUrl(accessToken)
-val voucherUrl = BuzzebeesSDK.instance().buildVoucherUrl(accessToken)
+// Cart root page (no path)
+val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken)
+// Result: https://api.com/landing/beesbenefit?access_key=token&appname_config=beesbenefit
 
-// With additional parameters
-val voucherUrl = BuzzebeesSDK.instance().buildVoucherUrl(
+// My Orders page
+val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
     accessToken = accessToken,
-    additionalParams = mapOf(
-        "category" to "discount",
-        "status" to "active"
-    )
+    path = "/myorder"
 )
+// Result: https://api.com/landing/beesbenefit/myorder?access_key=token&appname_config=beesbenefit
 
-// With custom app name
-val cartUrl = BuzzebeesSDK.instance().buildCartUrl(
+// Vouchers page
+val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
     accessToken = accessToken,
-    appName = "customapp"
+    path = "/voucher"
 )
-```
+// Result: https://api.com/landing/beesbenefit/voucher?access_key=token&appname_config=beesbenefit
 
-#### 5.4. Flexible Cart URL Builder
-
-**Function**: `buildFlexibleCartUrl(accessToken: String, path: String? = null, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
-
-Builds cart URLs with custom paths and parameters.
-
-**Parameters**:
-- `accessToken`: Access token for authentication
-- `path`: Optional additional path (e.g., "/settings", "/profile")
-- `additionalParams`: Optional additional parameters
-- `appName`: Optional custom app name (uses SDK config if null)
-- `baseCartUrl`: Optional custom base URL (uses SDK config if null)
-
-**Example**:
-```kotlin
-// Custom path
+// Custom settings page with additional parameters
 val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
     accessToken = accessToken,
     path = "/settings",
-    additionalParams = mapOf("tab" to "profile")
+    additionalParams = mapOf("tab" to "profile", "theme" to "dark")
 )
+// Result: https://api.com/landing/beesbenefit/settings?access_key=token&appname_config=beesbenefit&tab=profile&theme=dark
 
-// Different app
+// Different app with custom path
 val customUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
     accessToken = accessToken,
     appName = "customapp",
     path = "/dashboard"
 )
+// Result: https://api.com/landing/customapp/dashboard?access_key=token&appname_config=customapp
 ```
 
-#### 5.5. Helper Functions
+**Common Paths You Can Use**:
+- `null` or empty - Root cart page
+- `"/myorder"` - My orders page
+- `"/voucher"` - Vouchers/coupons page
+- `"/settings"` - Settings page
+- `"/profile"` - Profile page
+- `"/history"` - Purchase history
+- `"/support"` - Support/help page
+- Any custom path your cart application supports
+
+#### 5.4. Helper Functions
 
 **Create AccessTokenRequest**: `createAccessTokenRequest(customReturnUrl: String? = null, appId: String? = null, appName: String? = null): AccessTokenRequest`
 
 Creates AccessTokenRequest using SDK configuration.
 
-**Create Return URL**: `createReturnUrl(): String`
-
-Returns the return URL from SDK configuration (`urlSchemesMainProject`).
-
 **Check Availability**: `isShoppingCartAvailable(): Boolean`
 
 Checks if all required configuration is available for shopping cart functionality.
+
+**Validate AccessTokenRequest**: `validateAccessTokenRequest(request: AccessTokenRequest): Boolean`
+
+Validates if an AccessTokenRequest has all required fields.
 
 **Examples**:
 ```kotlin
 // Create request with SDK defaults
 val request = BuzzebeesSDK.instance().createAccessTokenRequest()
 
-// Get return URL from config
-val returnUrl = BuzzebeesSDK.instance().createReturnUrl() // Returns "myapp://"
-
-// Check availability
+// Check availability before using shopping cart features
 if (BuzzebeesSDK.instance().isShoppingCartAvailable()) {
-    // All required config is present
+    // All required config is present - safe to use cart functions
+    val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
+}
+
+// Validate a request before using it
+val request = AccessTokenRequest(/*...*/) 
+if (BuzzebeesSDK.instance().validateAccessTokenRequest(request)) {
+    // Request is valid - safe to use
+    val result = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
 }
 ```
 
@@ -466,9 +463,9 @@ class CampaignDetailViewModel : ViewModel() {
                         appPreference.saveShoppingCartAccessToken(accessToken)
                         
                         // Build specific cart URLs using the token
-                        val cartUrl = BuzzebeesSDK.instance().buildCartUrl(accessToken)
-                        val myOrderUrl = BuzzebeesSDK.instance().buildMyOrderUrl(accessToken)
-                        val voucherUrl = BuzzebeesSDK.instance().buildVoucherUrl(accessToken)
+                        val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken)
+                        val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/myorder")
+                        val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/voucher")
                         
                         // Open shopping cart
                         event.setEventValue(
@@ -522,8 +519,9 @@ class CampaignDetailViewModel : ViewModel() {
     fun navigateToMyOrders() {
         val accessToken = getStoredAccessToken() ?: return
         
-        val myOrderUrl = BuzzebeesSDK.instance().buildMyOrderUrl(
+        val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
             accessToken = accessToken,
+            path = "/myorder",
             additionalParams = mapOf(
                 "sortBy" to "date",
                 "filter" to "active"
@@ -540,12 +538,25 @@ class CampaignDetailViewModel : ViewModel() {
             mapOf("category" to it) 
         } ?: emptyMap()
         
-        val voucherUrl = BuzzebeesSDK.instance().buildVoucherUrl(
+        val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
             accessToken = accessToken,
+            path = "/voucher",
             additionalParams = additionalParams
         )
         
         openWebView(voucherUrl)
+    }
+    
+    fun navigateToSettings() {
+        val accessToken = getStoredAccessToken() ?: return
+        
+        val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
+            accessToken = accessToken,
+            path = "/settings",
+            additionalParams = mapOf("tab" to "profile")
+        )
+        
+        openWebView(settingsUrl)
     }
 }
 ```
@@ -693,7 +704,7 @@ class ShoppingCartManager {
     suspend fun navigateToCart(): String? {
         return when (val result = initializeCartAccess()) {
             is CartAccessResult.Success -> {
-                BuzzebeesSDK.instance().buildCartUrl(result.accessToken)
+                BuzzebeesSDK.instance().buildFlexibleCartUrl(result.accessToken)
             }
             is CartAccessResult.Error -> null
         }
@@ -702,8 +713,9 @@ class ShoppingCartManager {
     suspend fun navigateToMyOrders(filters: Map<String, String> = emptyMap()): String? {
         return when (val result = initializeCartAccess()) {
             is CartAccessResult.Success -> {
-                BuzzebeesSDK.instance().buildMyOrderUrl(
+                BuzzebeesSDK.instance().buildFlexibleCartUrl(
                     accessToken = result.accessToken,
+                    path = "/myorder",
                     additionalParams = filters
                 )
             }
@@ -715,8 +727,9 @@ class ShoppingCartManager {
         return when (val result = initializeCartAccess()) {
             is CartAccessResult.Success -> {
                 val params = category?.let { mapOf("category" to it) } ?: emptyMap()
-                BuzzebeesSDK.instance().buildVoucherUrl(
+                BuzzebeesSDK.instance().buildFlexibleCartUrl(
                     accessToken = result.accessToken,
+                    path = "/voucher",
                     additionalParams = params
                 )
             }
