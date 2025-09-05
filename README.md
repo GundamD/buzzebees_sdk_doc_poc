@@ -2,7 +2,7 @@
 
 The Buzzebees SDK provides core functionalities for your Android application, including authentication, real-time badge management, and custom API integration. This guide covers SDK integration and all available features.
 
-> 📋 **Quick Reference**: For a complete overview of all SDK capabilities, see the [**SDK Comprehensive Guide**](readme/SDK_COMPREHENSIVE_GUIDE.md)
+> 📋 **Quick Reference**: For a complete overview of all SDK capabilities, see the [**SDK Comprehensive Guide**](docs/readme/SDK_COMPREHENSIVE_GUIDE.md)
 
 ## ✨ What's New in This Enhanced Version
 
@@ -88,30 +88,30 @@ dependencies {
 
 | No.   | UseCase Name               | Guide Link                                          |
 |-------|----------------------------|-----------------------------------------------------|
-| 2.1   | Address UseCase            | [source](readme/AddressUseCase_GUIDE.md)            |
-| 2.2   | AddressInformation UseCase | [source](readme/AddressInformationUseCase_GUIDE.md) |
-| 2.3   | Auth UseCase               | [source](readme/AuthUseCase_GUIDE.md)               |
-| 2.3.1 | Auth Provider              | [source](readme/auth_provider_guide.md)             |
-| 2.4   | Badge UseCase              | [source](readme/BadgeUseCase_GUIDE.md)              |
-| 2.5   | Campaign UseCase           | [source](readme/CampaignUseCase_GUIDE.md)           |
-| 2.5.1 | Campaign Handling & Validation | [source](readme/CampaignHandling_GUIDE.md)     |
-| 2.6   | Cart UseCase               | [source](readme/CartUseCase_GUIDE.md)               |
-| 2.7   | Category UseCase           | [source](readme/CategoryUseCase_GUIDE.md)           |
-| 2.8   | Consent UseCase            | [source](readme/ConsentUseCase_GUIDE.md)            |
-| 2.9   | Coupon UseCase             | [source](readme/CouponUseCase_GUIDE.md)             |
-| 2.10  | Dashboard UseCase          | [source](readme/DashBoardUseCase_GUIDE.md)          |
-| 2.11  | History UseCase            | [source](readme/HistoryUseCase_GUIDE.md)            |
-| 2.12  | Maintenance UseCase        | [source](readme/MaintenanceUseCase_GUIDE.md)        |
-| 2.13  | Notification UseCase       | [source](readme/NotificationUseCase_GUIDE.md)       |
-| 2.14  | Place UseCase              | [source](readme/PlaceUseCase_GUIDE.md)              |
-| 2.15  | PointLog UseCase           | [source](readme/PointLogUseCase_GUIDE.md)           |
-| 2.16  | Profile UseCase            | [source](readme/ProfileUseCase_GUIDE.md)            |
-| 2.17  | Register UseCase           | [source](readme/RegisterUseCase_GUIDE.md)           |
-| 2.18  | RequestHelp UseCase        | [source](readme/RequestHelpUseCase_GUIDE.md)        |
-| 2.19  | Stamp UseCase              | [source](readme/StampUseCase_GUIDE.md)              |
-| 2.20  | UserLevel UseCase          | [source](readme/UserLevelUseCase_GUIDE.md)          |
-| 2.21  | Wallet UseCase             | [source](readme/WalletUseCase_GUIDE.md)             |
-| 2.22  | ZipCode UseCase            | [source](readme/ZipCodeUseCase_GUIDE.md)            |
+| 2.1   | Address UseCase            | [source](docs/readme/AddressUseCase_GUIDE.md)            |
+| 2.2   | AddressInformation UseCase | [source](docs/readme/AddressInformationUseCase_GUIDE.md) |
+| 2.3   | Auth UseCase               | [source](docs/readme/AuthUseCase_GUIDE.md)               |
+| 2.3.1 | Auth Provider              | [source](docs/readme/auth_provider_guide.md)             |
+| 2.4   | Badge UseCase              | [source](docs/readme/BadgeUseCase_GUIDE.md)              |
+| 2.5   | Campaign UseCase           | [source](docs/readme/CampaignUseCase_GUIDE.md)           |
+| 2.5.1 | Campaign Handling & Validation | [source](docs/readme/CampaignHandling_GUIDE.md)     |
+| 2.6   | Cart UseCase               | [source](docs/readme/CartUseCase_GUIDE.md)               |
+| 2.7   | Category UseCase           | [source](docs/readme/CategoryUseCase_GUIDE.md)           |
+| 2.8   | Consent UseCase            | [source](docs/readme/ConsentUseCase_GUIDE.md)            |
+| 2.9   | Coupon UseCase             | [source](docs/readme/CouponUseCase_GUIDE.md)             |
+| 2.10  | Dashboard UseCase          | [source](docs/readme/DashBoardUseCase_GUIDE.md)          |
+| 2.11  | History UseCase            | [source](docs/readme/HistoryUseCase_GUIDE.md)            |
+| 2.12  | Maintenance UseCase        | [source](docs/readme/MaintenanceUseCase_GUIDE.md)        |
+| 2.13  | Notification UseCase       | [source](docs/readme/NotificationUseCase_GUIDE.md)       |
+| 2.14  | Place UseCase              | [source](docs/readme/PlaceUseCase_GUIDE.md)              |
+| 2.15  | PointLog UseCase           | [source](docs/readme/PointLogUseCase_GUIDE.md)           |
+| 2.16  | Profile UseCase            | [source](docs/readme/ProfileUseCase_GUIDE.md)            |
+| 2.17  | Register UseCase           | [source](docs/readme/RegisterUseCase_GUIDE.md)           |
+| 2.18  | RequestHelp UseCase        | [source](docs/readme/RequestHelpUseCase_GUIDE.md)        |
+| 2.19  | Stamp UseCase              | [source](docs/readme/StampUseCase_GUIDE.md)              |
+| 2.20  | UserLevel UseCase          | [source](docs/readme/UserLevelUseCase_GUIDE.md)          |
+| 2.21  | Wallet UseCase             | [source](docs/readme/WalletUseCase_GUIDE.md)             |
+| 2.22  | ZipCode UseCase            | [source](docs/readme/ZipCodeUseCase_GUIDE.md)            |
 
 ### 2.23 Custom API Integration ⭐ **NEW**
 
@@ -119,8 +119,8 @@ The Buzzebees SDK now allows users to create custom API services while leveragin
 
 | Component                    | Description                                                                                  | Guide Link                                     |
 |------------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------|
-| **Custom API Integration**   | Complete guide for creating custom API services using SDK configuration                      | [source](readme/CustomApiIntegration_GUIDE.md) |
-| **URL Builder Extensions**   | Guide for using BuzzebeesSDK URL building capabilities for campaigns and profile images     | [source](readme/UrlExtensions_GUIDE.md)        |
+| **Custom API Integration**   | Complete guide for creating custom API services using SDK configuration                      | [source](docs/readme/CustomApiIntegration_GUIDE.md) |
+| **URL Builder Extensions**   | Guide for using BuzzebeesSDK URL building capabilities for campaigns and profile images     | [source](docs/readme/UrlExtensions_GUIDE.md)        |
 
 #### Quick Start - Custom API
 
@@ -147,8 +147,8 @@ production-ready applications with excellent user experience.
 
 | Component                        | Description                                                                                                              | Guide Link                                        |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| **Error Handler Implementation** | Complete guide for implementing centralized error handling system with ErrorAction sealed class and SDKErrorHandler      | [source](readme/ErrorHandlerGuide.md)             |
-| **Error Handling Summary**       | Overview of all error handling tables added to UseCase guides, including error codes, scenarios, and recommended actions | [source](readme/ERROR_HANDLING_UPDATE_SUMMARY.md) |
+| **Error Handler Implementation** | Complete guide for implementing centralized error handling system with ErrorAction sealed class and SDKErrorHandler      | [source](docs/readme/ErrorHandlerGuide.md)             |
+| **Error Handling Summary**       | Overview of all error handling tables added to UseCase guides, including error codes, scenarios, and recommended actions | [source](docs/readme/ERROR_HANDLING_UPDATE_SUMMARY.md) |
 
 #### Key Features:
 
@@ -464,3 +464,14 @@ architectural patterns:
 
 Each approach ensures proper resource management and optimal performance while providing real-time
 badge updates to your application's UI.
+
+---
+
+## Documentation Navigation
+
+📖 **Detailed Guides**: All detailed guides are located in the [`docs/readme/`](docs/readme/) directory  
+🔍 **Quick Reference**: Check the [SDK Comprehensive Guide](docs/readme/SDK_COMPREHENSIVE_GUIDE.md) for complete SDK overview  
+⚙️ **Advanced Features**: See [Custom API Integration](docs/readme/CustomApiIntegration_GUIDE.md) for leveraging SDK infrastructure  
+🛠️ **Error Handling**: Review [Error Handler Guide](docs/readme/ErrorHandlerGuide.md) for production-ready error management  
+
+For more information and support, visit our documentation website or contact the Buzzebees development team.
