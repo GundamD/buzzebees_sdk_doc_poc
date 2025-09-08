@@ -51,13 +51,19 @@ The URL builder automatically uses:
 
 ### Extension Functions on BuzzebeesSDK
 
-The extension functions provide direct access without needing to manage the URL builder instance:
+The extension functions provide URL building functionality:
 
 ```kotlin
 val profileUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
 val campaignImageUrl = BuzzebeesSDK.instance().buildFullImageUrl(image, campaignId)
+
+// Website URLs
 val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
+val websiteUrlFromDetails = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails) // 🆕 CampaignDetails support
+
+// Redeem URLs
 val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
+val redeemUrlFromDetails = BuzzebeesSDK.instance().buildRedeemUrl(campaignDetails, userId, options) // 🆕 CampaignDetails support
 
 // Shopping cart URLs (async)
 val shoppingCartResult = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
@@ -1145,4 +1151,65 @@ Key advantages:
 - **Shopping Cart Integration**: Complete cart URL management with token handling
 - **Easy Integration**: Simple extension functions on the main SDK
 
-For additional implementation details, refer to the `BuzzebeesSDK_UrlExtension.kt` source file and the `BuzzebeesUrlBuilder` utility class.
+### 🆕 CampaignDetails Support
+
+The URL Builder Extensions now support `CampaignDetails` objects for enhanced URL building:
+
+#### Enhanced Website URLs
+```kotlin
+// Standard Campaign
+val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
+
+// 🆕 CampaignDetails with automatic parameters
+val campaignDetails = CampaignDetails(id = 123, website = "https://example.com", categoryID = 5, type = 1, agencyID = 10)
+val enhancedWebsiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails)
+// Returns: "https://example.com?campaign_id=123&category_id=5&campaign_type=1&agency_id=10"
+```
+
+#### Enhanced Redeem URLs
+```kotlin
+// Standard Campaign
+val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
+
+// 🆕 CampaignDetails support
+val campaignDetails = getCampaignDetails()
+val enhancedRedeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaignDetails, userId, options)
+// Uses comprehensive CampaignDetails data with full URL building logic
+```
+
+#### Usage Examples with CampaignDetails
+```kotlin
+class CampaignDetailActivity : AppCompatActivity() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        val campaignDetails = getCampaignDetailsFromIntent()
+        val userId = getCurrentUserId()
+        
+        // Enhanced website URL with automatic parameters
+        websiteButton.setOnClickListener {
+            val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails)
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl)))
+        }
+        
+        // Enhanced redeem URL with CampaignDetails
+        redeemButton.setOnClickListener {
+            val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
+                campaignDetails = campaignDetails,
+                userId = userId,
+                options = getRedeemOptions()
+            )
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(redeemUrl)))
+        }
+    }
+}
+```
+
+The CampaignDetails support provides automatic parameter inclusion for:
+- Campaign ID (`campaign_id`)
+- Category ID (`category_id`) 
+- Campaign Type (`campaign_type`)
+- Agency ID (`agency_id`)
+
+For additional implementation details, refer to the `BuzzebeesSDK_UrlExtension.kt` source file.
