@@ -1,18 +1,20 @@
 # URL Builder Extensions Guide
 
-This guide provides comprehensive documentation for using the BuzzebeesSDK URL building capabilities through the `BuzzebeesSDK_UrlExtension.kt` file. These extensions allow you to build URLs for campaigns, profile images, redemption flows, and shopping cart access with automatic configuration and parameter handling.
+This guide provides comprehensive documentation for using the BuzzebeesSDK URL building capabilities through the `BuzzebeesSDK_UrlExtension.kt` file. These extensions allow you to build URLs for campaigns, profile images, redemption flows, shopping cart access, and generic URL building with automatic configuration and parameter handling.
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Accessing URL Builder](#accessing-url-builder)
-3. [Available Extension Functions](#available-extension-functions)
-4. [Usage Examples](#usage-examples)
-5. [Integration Patterns](#integration-patterns)
-6. [Best Practices](#best-practices)
-7. [Troubleshooting](#troubleshooting)
+2. [Available Extension Functions](#available-extension-functions)
+3. [Generic URL Building](#generic-url-building)
+4. [Access Token Management](#access-token-management)
+5. [Shopping Cart Extensions](#shopping-cart-extensions)
+6. [Usage Examples](#usage-examples)
+7. [Integration Patterns](#integration-patterns)
+8. [Best Practices](#best-practices)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -22,59 +24,19 @@ The URL Builder Extensions provide convenient methods for:
 
 - **Profile Image URLs**: Generate complete URLs for user profile images
 - **Campaign Image URLs**: Build full image URLs for campaigns with proper base URL handling
-- **Website URLs**: Create simple website URLs with basic campaign configuration
-- **Redeem URLs**: Generate complete redemption URLs with template replacements and parameters
+- **Generic URL Building**: 🆕 Flexible URL building with template replacement and parameter handling
+- **Redeem URLs**: Generate complete redemption URLs with template replacements and parameters  
+- **Access Token Management**: 🆕 Generic access token generation for any purpose
 - **Shopping Cart URLs**: Build shopping cart URLs with access token management and parameter handling
 
 ### Benefits
 
 ✅ **Automatic Configuration**: Uses SDK's configured base URLs and authentication  
-✅ **Template Processing**: Handles URL template replacements automatically  
-✅ **Parameter Management**: Manages query parameters and user-specific data  
+✅ **Template Processing**: 🆕 Flexible template replacement with configurable patterns  
+✅ **Parameter Management**: Enhanced query parameter and URL option handling  
 ✅ **Type Safety**: Strongly typed parameters with proper validation  
+✅ **Generic Access Tokens**: 🆕 Reusable access token system for multiple services  
 ✅ **Easy Integration**: Simple extension functions on the main SDK instance  
-
----
-
-## Accessing URL Builder
-
-### Direct Access to URL Builder
-
-```kotlin
-val urlBuilder = BuzzebeesSDK.instance().urlBuilder
-```
-
-The URL builder automatically uses:
-- **Configs**: From `servicesConfigs()` - includes base URLs and app configuration
-- **Auth Provider**: From `authProvider()` - provides authentication tokens
-- **Device Info**: From `deviceInfoProvider()` - includes device-specific information
-
-### Extension Functions on BuzzebeesSDK
-
-The extension functions provide URL building functionality:
-
-```kotlin
-val profileUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
-val campaignImageUrl = BuzzebeesSDK.instance().buildFullImageUrl(image, campaignId)
-
-// Website URLs
-val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
-val websiteUrlFromDetails = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails) // 🆕 CampaignDetails support
-
-// Redeem URLs
-val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
-val redeemUrlFromDetails = BuzzebeesSDK.instance().buildRedeemUrl(campaignDetails, userId, options) // 🆕 CampaignDetails support
-
-// Shopping cart URLs (async)
-val shoppingCartResult = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
-val defaultCartResult = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-
-// Cart URLs using flexible builder with different paths
-val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken) // Root page
-val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/myorder")
-val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/voucher")
-val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/settings")
-```
 
 ---
 
@@ -86,16 +48,10 @@ val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/se
 
 Builds a complete profile image URL for the specified user.
 
-**Parameters**:
-- `userId`: User ID for the profile
-
-**Returns**: Complete profile image URL with authentication token automatically included
-
 **Example**:
 ```kotlin
-val userId = "12345"
-val profileImageUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
-// Returns: "https://api.buzzebees.com/profiles/12345/image?token=auto_token"
+val profileImageUrl = BuzzebeesSDK.instance().buildProfileImageUrl("user123")
+// Returns: "https://api.buzzebees.com/profiles/user123/picture?token=auto_token"
 ```
 
 ### 2. Full Image URL Builder
@@ -104,227 +60,317 @@ val profileImageUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
 
 Builds complete image URLs for campaigns with proper base URL handling.
 
-**Parameters**:
-- `image`: Optional existing image URL
-- `id`: Optional campaign ID
-
-**Returns**: Complete image URL with base URL automatically retrieved from configuration
-
 **Example**:
 ```kotlin
 val imageUrl = BuzzebeesSDK.instance().buildFullImageUrl(
     image = "campaign-banner.jpg",
     id = "campaign_123"
 )
-// Returns: "https://cdn.buzzebees.com/images/campaign-banner.jpg"
 ```
 
-### 3. Website URL Builder
+### 3. Redeem URL Builder
 
-**Function**: `buildWebsiteUrl(campaign: Campaign?): String`
+**Function**: `buildRedeemUrl(campaign: Campaign?, userId: String, options: RedeemOptions = RedeemOptions(), urlOptions: UrlBuildOptions = UrlBuildOptions(), templateConfig: TemplateReplacementConfig = TemplateReplacementConfig()): String`
 
-Builds simple website URLs with basic campaign configuration.
+**Function**: `buildRedeemUrl(campaignDetails: CampaignDetails?, userId: String, options: RedeemOptions = RedeemOptions(), urlOptions: UrlBuildOptions = UrlBuildOptions(), templateConfig: TemplateReplacementConfig = TemplateReplacementConfig()): String`
 
-**Parameters**:
-- `campaign`: Campaign object containing website configuration
-
-**Returns**: Complete website URL
-
-**Example**:
-```kotlin
-val campaign = Campaign(
-    id = "123",
-    websiteUrl = "https://example.com/campaign",
-    // ... other campaign properties
-)
-
-val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
-// Returns: "https://example.com/campaign" (processed with any necessary parameters)
-```
-
-### 4. Redeem URL Builder
-
-**Function**: `buildRedeemUrl(campaign: Campaign?, userId: String, options: RedeemOptions = RedeemOptions()): String`
-
-Builds complete redemption URLs with all template replacements and parameters.
-
-**Parameters**:
-- `campaign`: Campaign object containing website and redemption details
-- `userId`: User ID for the redemption
-- `options`: Redeem options including color, size, quantity, etc.
-
-**Returns**: Complete redemption URL with all parameters and template replacements
+Builds complete redemption URLs with enhanced template replacement and parameter handling.
 
 **Example**:
 ```kotlin
 val redeemOptions = RedeemOptions(
     color = "red",
-    size = "L",
-    quantity = 2,
-    customData = mapOf("promo" to "SUMMER2024")
+    size = "L", 
+    quantity = "2",
+    walletCard = "visa123"
+)
+
+val urlOptions = UrlBuildOptions(
+    shouldShuffleToken = true,
+    nativeHeader = false,
+    header = true,
+    additionalParams = mapOf(
+        "customParam1" to "value1",
+        "isAllianzMember" to "N"
+    )
+)
+
+val templateConfig = TemplateReplacementConfig(
+    tokenPatterns = listOf("{token}", "<token>", "{auth_token}"),
+    customReplacements = mapOf(
+        "{special_param}" to "special_value"
+    )
 )
 
 val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
     campaign = campaign,
-    userId = "user_123",
-    options = redeemOptions
+    userId = "user123",
+    options = redeemOptions,
+    urlOptions = urlOptions,
+    templateConfig = templateConfig
 )
-// Returns: Complete URL with all parameters processed
 ```
 
-### 5. Shopping Cart URL Builders
+---
 
-The shopping cart URL builders provide comprehensive functionality for managing shopping cart access tokens and building various cart-related URLs.
+## Generic URL Building
 
-#### 5.1. Main Shopping Cart URL Builder
+### 🆕 Build Generic URL with Template Replacement
 
-**Function**: `buildShoppingCartUrl(request: AccessTokenRequest, baseCartUrl: String? = null): ShoppingCartUrlBuildResult`
+**Function**: `buildGenericUrl(baseUrl: String, urlOptions: UrlBuildOptions = UrlBuildOptions(), templateConfig: TemplateReplacementConfig = TemplateReplacementConfig(), userId: String? = null, campaignId: String? = null): String`
 
-Builds complete shopping cart URLs with automatic access token retrieval and URL construction.
+The most flexible URL builder that can enhance any URL with template replacement and parameter handling.
 
-**Parameters**:
-- `request`: AccessTokenRequest containing app configuration and return URLs
-- `baseCartUrl`: Optional custom base cart URL (uses `webShoppingUrl` from config if null)
+**Data Classes**:
 
-**Returns**: `ShoppingCartUrlBuildResult` containing either success with URL and token, or error details
-
-**Example**:
 ```kotlin
-val request = AccessTokenRequest(
-    errorUrl = "myapp://",
-    successUrl = "myapp://",
-    returnUrl = "myapp://",
-    appId = "your-app-id",
-    appName = "beesbenefit"
+data class UrlBuildOptions(
+    val shouldShuffleToken: Boolean = true,
+    val nativeHeader: Boolean = false,
+    val header: Boolean = true,
+    val additionalParams: Map<String, String> = emptyMap()
 )
 
-// Async operation
-val result = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
-when (result) {
-    is ShoppingCartUrlBuildResult.Success -> {
-        val url = result.result.url
-        val token = result.result.accessToken
-        // Use URL and save token
-    }
-    is ShoppingCartUrlBuildResult.Error -> {
-        // Handle error
+data class TemplateReplacementConfig(
+    val tokenPatterns: List<String> = listOf("{token}", "<token>"),
+    val userIdPatterns: List<String> = listOf("{userId}", "<userId>", "{user_id}", "<user_id>"),
+    val campaignIdPatterns: List<String> = listOf("{campaignId}", "<campaignId>", "{CampaignId}", "{campaign_id}"),
+    val customReplacements: Map<String, String> = emptyMap()
+)
+```
+
+**Examples**:
+
+```kotlin
+// Basic URL enhancement
+var url = "https://example.com/{token}/campaign?id={campaignId}"
+val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = url,
+    userId = "user123",
+    campaignId = "campaign456"
+)
+// Result: "https://example.com/shuffled_token_here/campaign?id=campaign456&token=shuffled_token_here&return_url=myapp&appName=MyApp&theme=MyApp&nativeheader=false&header=true"
+
+// Advanced configuration
+var url = bannerComponentItemModel.url.value()
+val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = url,
+    urlOptions = UrlBuildOptions(
+        shouldShuffleToken = false, // Use original token
+        nativeHeader = false,
+        header = true,
+        additionalParams = mapOf(
+            "appName" to appName,
+            "theme" to appName,
+            "isAllianzMember" to "N"
+        )
+    ),
+    templateConfig = TemplateReplacementConfig(
+        tokenPatterns = listOf("{token}", "<token>"),
+        customReplacements = mapOf(
+            "{locale}" to "th",
+            "{special_param}" to "custom_value"
+        )
+    )
+)
+
+// Replace both {token} and <token> patterns
+var url = "https://api.com/service?auth={token}&backup=<token>&user={userId}"
+val processedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = url,
+    userId = "user123"
+)
+```
+
+**Template Replacement Features**:
+- **Token Patterns**: `{token}`, `<token>` - Replaced with authentication token
+- **User ID Patterns**: `{userId}`, `<userId>`, `{user_id}`, `<user_id>`
+- **Campaign ID Patterns**: `{campaignId}`, `<campaignId>`, `{CampaignId}`, `{campaign_id}`
+- **Device Info**: `<uid>`, `<imei>`, `<deviceId>`, `<model>`, `{model}`, `<device_locale>`, `{device_locale}`
+- **Custom Replacements**: Any custom pattern you define
+
+**URL Options**:
+- **shouldShuffleToken**: Control token shuffling behavior
+- **nativeHeader**: Native header visibility
+- **header**: Standard header visibility  
+- **additionalParams**: Custom URL parameters
+
+---
+
+## Access Token Management
+
+### 🆕 Generic Access Token System
+
+The SDK now provides a generic access token system that can be used for shopping carts and other services.
+
+#### Access Token Results
+
+```kotlin
+sealed class AccessTokenResult {
+    data class Success(val accessToken: String) : AccessTokenResult()
+    data class Error(val message: String, val throwable: Throwable? = null) : AccessTokenResult()
+}
+```
+
+#### Request Access Token
+
+**Function**: `requestAccessToken(request: AccessTokenRequest): AccessTokenResult`
+
+Generic method to get access tokens for any purpose.
+
+```kotlin
+suspend fun getAccessToken() {
+    val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
+    
+    when (val result = BuzzebeesSDK.instance().requestAccessToken(request)) {
+        is AccessTokenResult.Success -> {
+            val accessToken = result.accessToken
+            // Use token for any service
+            useTokenForCustomService(accessToken)
+        }
+        is AccessTokenResult.Error -> {
+            // Handle error
+            showError(result.message)
+        }
     }
 }
 ```
 
-#### 5.2. Default Shopping Cart URL Builder
+#### Generate Access Token Requests
+
+**Function**: `generateAccessTokenRequest(customReturnUrl: String? = null, appId: String? = null, appName: String? = null): AccessTokenRequest`
+
+Generate request using SDK configuration.
+
+**Function**: `generateCustomAccessTokenRequest(errorUrl: String, successUrl: String, returnUrl: String, appId: String, appName: String): AccessTokenRequest`
+
+Generate request with custom URLs.
+
+```kotlin
+// Using SDK configuration
+val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
+
+// Custom configuration  
+val customRequest = BuzzebeesSDK.instance().generateCustomAccessTokenRequest(
+    errorUrl = "myapp://error",
+    successUrl = "myapp://success", 
+    returnUrl = "myapp://return",
+    appId = "my-app-id",
+    appName = "MyApp"
+)
+```
+
+---
+
+## Shopping Cart Extensions
+
+### Shopping Cart URL Building
+
+The shopping cart system now uses the generic access token system and supports enhanced URL options.
+
+#### Data Classes
+
+```kotlin
+data class ShoppingCartUrlResult(
+    val url: String,
+    val accessToken: String
+)
+
+sealed class ShoppingCartUrlBuildResult {
+    data class Success(val result: ShoppingCartUrlResult) : ShoppingCartUrlBuildResult()
+    data class Error(val message: String, val throwable: Throwable? = null) : ShoppingCartUrlBuildResult()
+}
+```
+
+#### Main Functions
+
+**Function**: `buildShoppingCartUrl(request: AccessTokenRequest, baseCartUrl: String? = null, urlOptions: UrlBuildOptions = UrlBuildOptions()): ShoppingCartUrlBuildResult`
+
+Build shopping cart URL with automatic access token retrieval.
 
 **Function**: `buildDefaultShoppingCartUrl(customReturnUrl: String? = null, baseCartUrl: String? = null): ShoppingCartUrlBuildResult`
 
-Builds shopping cart URLs using SDK configuration automatically.
-
-**Parameters**:
-- `customReturnUrl`: Optional custom return URL (uses `urlSchemesMainProject` from config if null)
-- `baseCartUrl`: Optional custom base cart URL (uses `webShoppingUrl` from config if null)
-
-**Returns**: `ShoppingCartUrlBuildResult` with automatically configured request
-
-**Example**:
-```kotlin
-// Uses all SDK configuration automatically
-val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-
-// Or with custom return URL
-val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl(
-    customReturnUrl = "customapp://return"
-)
-```
-
-#### 5.3. Flexible Cart URL Builder
+Build cart URL using SDK defaults.
 
 **Function**: `buildFlexibleCartUrl(accessToken: String, path: String? = null, additionalParams: Map<String, String> = emptyMap(), appName: String? = null, baseCartUrl: String? = null): String`
 
-Builds cart URLs with custom paths and parameters. This is the main function for building all cart-related URLs.
+Build specific cart URLs with existing token.
 
-**Parameters**:
-- `accessToken`: Access token for authentication
-- `path`: Optional additional path (e.g., "/myorder", "/voucher", "/settings", "/profile")
-- `additionalParams`: Optional additional parameters
-- `appName`: Optional custom app name (uses SDK config if null)
-- `baseCartUrl`: Optional custom base URL (uses SDK config if null)
+#### Examples
 
-**Examples**:
 ```kotlin
-// Cart root page (no path)
-val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken)
-// Result: https://api.com/landing/beesbenefit?access_key=token&appname_config=beesbenefit
-
-// My Orders page
-val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-    accessToken = accessToken,
-    path = "/myorder"
-)
-// Result: https://api.com/landing/beesbenefit/myorder?access_key=token&appname_config=beesbenefit
-
-// Vouchers page
-val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-    accessToken = accessToken,
-    path = "/voucher"
-)
-// Result: https://api.com/landing/beesbenefit/voucher?access_key=token&appname_config=beesbenefit
-
-// Custom settings page with additional parameters
-val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-    accessToken = accessToken,
-    path = "/settings",
-    additionalParams = mapOf("tab" to "profile", "theme" to "dark")
-)
-// Result: https://api.com/landing/beesbenefit/settings?access_key=token&appname_config=beesbenefit&tab=profile&theme=dark
-
-// Different app with custom path
-val customUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-    accessToken = accessToken,
-    appName = "customapp",
-    path = "/dashboard"
-)
-// Result: https://api.com/landing/customapp/dashboard?access_key=token&appname_config=customapp
+class ShoppingCartManager {
+    
+    // Simple cart access
+    suspend fun openCart(): String? {
+        val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
+        
+        return when (result) {
+            is ShoppingCartUrlBuildResult.Success -> {
+                // Save token for future use
+                saveAccessToken(result.result.accessToken)
+                result.result.url
+            }
+            is ShoppingCartUrlBuildResult.Error -> {
+                Log.e("Cart", result.message)
+                null
+            }
+        }
+    }
+    
+    // Advanced cart access with options
+    suspend fun openCartAdvanced(): String? {
+        val request = BuzzebeesSDK.instance().generateAccessTokenRequest(
+            customReturnUrl = "myapp://cart-return"
+        )
+        
+        val urlOptions = UrlBuildOptions(
+            additionalParams = mapOf(
+                "theme" to "dark",
+                "language" to "th"
+            )
+        )
+        
+        val result = BuzzebeesSDK.instance().buildShoppingCartUrl(request, urlOptions = urlOptions)
+        
+        return when (result) {
+            is ShoppingCartUrlBuildResult.Success -> result.result.url
+            is ShoppingCartUrlBuildResult.Error -> null
+        }
+    }
+    
+    // Navigate to specific cart pages
+    fun navigateToMyOrders(accessToken: String): String {
+        return BuzzebeesSDK.instance().buildFlexibleCartUrl(
+            accessToken = accessToken,
+            path = "/myorder",
+            additionalParams = mapOf("sortBy" to "date")
+        )
+    }
+    
+    fun navigateToVouchers(accessToken: String, category: String? = null): String {
+        val params = category?.let { mapOf("category" to it) } ?: emptyMap()
+        return BuzzebeesSDK.instance().buildFlexibleCartUrl(
+            accessToken = accessToken,
+            path = "/voucher",
+            additionalParams = params
+        )
+    }
+}
 ```
 
-**Common Paths You Can Use**:
-- `null` or empty - Root cart page
-- `"/myorder"` - My orders page
-- `"/voucher"` - Vouchers/coupons page
-- `"/settings"` - Settings page
-- `"/profile"` - Profile page
-- `"/history"` - Purchase history
-- `"/support"` - Support/help page
-- Any custom path your cart application supports
+#### Helper Functions
 
-#### 5.4. Helper Functions
+**Function**: `isShoppingCartAvailable(): Boolean`
 
-**Create AccessTokenRequest**: `createAccessTokenRequest(customReturnUrl: String? = null, appId: String? = null, appName: String? = null): AccessTokenRequest`
+Check if shopping cart configuration is available.
 
-Creates AccessTokenRequest using SDK configuration.
-
-**Check Availability**: `isShoppingCartAvailable(): Boolean`
-
-Checks if all required configuration is available for shopping cart functionality.
-
-**Validate AccessTokenRequest**: `validateAccessTokenRequest(request: AccessTokenRequest): Boolean`
-
-Validates if an AccessTokenRequest has all required fields.
-
-**Examples**:
 ```kotlin
-// Create request with SDK defaults
-val request = BuzzebeesSDK.instance().createAccessTokenRequest()
-
-// Check availability before using shopping cart features
 if (BuzzebeesSDK.instance().isShoppingCartAvailable()) {
-    // All required config is present - safe to use cart functions
-    val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-}
-
-// Validate a request before using it
-val request = AccessTokenRequest(/*...*/) 
-if (BuzzebeesSDK.instance().validateAccessTokenRequest(request)) {
-    // Request is valid - safe to use
-    val result = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
+    // All required config is present
+    openCart()
+} else {
+    // Show configuration error
 }
 ```
 
@@ -332,237 +378,137 @@ if (BuzzebeesSDK.instance().validateAccessTokenRequest(request)) {
 
 ## Usage Examples
 
-### Basic Usage in Activities
+### Generic URL Building in Activities
 
 ```kotlin
 class CampaignDetailActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_campaign_detail)
         
-        val campaign = getCampaignFromIntent()
+        val bannerUrl = intent.getStringExtra("banner_url") ?: return
         val userId = getCurrentUserId()
+        val campaignId = intent.getStringExtra("campaign_id")
         
-        // Load campaign image
-        val imageUrl = BuzzebeesSDK.instance().buildFullImageUrl(
-            image = campaign.imageUrl,
-            id = campaign.id
-        )
-        
-        Glide.with(this)
-            .load(imageUrl)
-            .into(campaignImageView)
-        
-        // Set up redeem button
-        redeemButton.setOnClickListener {
-            val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
-                campaign = campaign,
-                userId = userId,
-                options = getRedeemOptions()
-            )
-            
-            // Open redemption URL
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(redeemUrl)))
-        }
-        
-        // Load website URL
-        websiteButton.setOnClickListener {
-            val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl)))
-        }
-    }
-    
-    private fun getRedeemOptions(): RedeemOptions {
-        return RedeemOptions(
-            color = colorSpinner.selectedItem.toString(),
-            size = sizeSpinner.selectedItem.toString(),
-            quantity = quantityPicker.value
-        )
-    }
-}
-```
-
-### Integration with RecyclerView
-
-```kotlin
-class CampaignAdapter : RecyclerView.Adapter<CampaignViewHolder>() {
-    
-    override fun onBindViewHolder(holder: CampaignViewHolder, position: Int) {
-        val campaign = campaigns[position]
-        
-        // Bind campaign image
-        val imageUrl = BuzzebeesSDK.instance().buildFullImageUrl(
-            image = campaign.imageUrl,
-            id = campaign.id
-        )
-        
-        Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .placeholder(R.drawable.campaign_placeholder)
-            .error(R.drawable.campaign_error)
-            .into(holder.campaignImage)
-        
-        // Set up click listener for redemption
-        holder.redeemButton.setOnClickListener {
-            val userId = UserManager.getCurrentUserId()
-            val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
-                campaign = campaign,
-                userId = userId
-            )
-            
-            val context = holder.itemView.context
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(redeemUrl)))
-        }
-    }
-}
-```
-
-### Profile Image Loading
-
-```kotlin
-class ProfileFragment : Fragment() {
-    
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        
-        val userId = arguments?.getString("user_id") ?: return
-        
-        // Load user profile image
-        val profileImageUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
-        
-        Glide.with(this)
-            .load(profileImageUrl)
-            .circleCrop()
-            .placeholder(R.drawable.default_profile)
-            .error(R.drawable.profile_error)
-            .into(profileImageView)
-    }
-}
-```
-
-### Shopping Cart URL Building
-
-```kotlin
-class CampaignDetailViewModel : ViewModel() {
-    
-    // Complete shopping cart flow with automatic SDK configuration
-    fun openShoppingCart() {
-        viewModelScope.launch {
-            try {
-                pageState.value = CampaignDetailPageState.Loading
-                
-                // Uses SDK configuration automatically:
-                // - appId from configs.appId
-                // - appName from configs.appName  
-                // - returnUrl from configs.urlSchemesMainProject
-                // - baseCartUrl from configs.webShoppingUrl
-                val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-                
-                pageState.value = CampaignDetailPageState.Data
-                
-                when (result) {
-                    is ShoppingCartUrlBuildResult.Success -> {
-                        val accessToken = result.result.accessToken
-                        
-                        // Save access token
-                        appPreference.saveShoppingCartAccessToken(accessToken)
-                        
-                        // Build specific cart URLs using the token
-                        val cartUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken)
-                        val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/myorder")
-                        val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken, "/voucher")
-                        
-                        // Open shopping cart
-                        event.setEventValue(
-                            CampaignDetailEvent.OpenShoppingCart(cartUrl)
-                        )
-                    }
-                    
-                    is ShoppingCartUrlBuildResult.Error -> {
-                        // Handle error
-                        event.setEventValue(
-                            CampaignDetailEvent.Failure(result.message.packMessage())
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                pageState.value = CampaignDetailPageState.Data
-                // Handle exception
-            }
-        }
-    }
-    
-    // Manual configuration approach (if needed)
-    fun openShoppingCartManual() {
-        viewModelScope.launch {
-            try {
-                // Create custom AccessTokenRequest
-                val request = BuzzebeesSDK.instance().createAccessTokenRequest(
-                    customReturnUrl = "customapp://return",
-                    appId = "custom-app-id", 
-                    appName = "CustomAppName"
+        // Enhance any URL with template replacement
+        val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+            baseUrl = bannerUrl,
+            urlOptions = UrlBuildOptions(
+                shouldShuffleToken = true,
+                additionalParams = mapOf(
+                    "appName" to BuildConfig.APP_NAME,
+                    "version" to BuildConfig.VERSION_NAME,
+                    "platform" to "android"
                 )
-                
-                val result = BuzzebeesSDK.instance().buildShoppingCartUrl(request)
-                
-                when (result) {
-                    is ShoppingCartUrlBuildResult.Success -> {
-                        // Handle success
-                        openShoppingCartUrl(result.result.url)
-                    }
-                    is ShoppingCartUrlBuildResult.Error -> {
-                        showError(result.message)
-                    }
-                }
-            } catch (e: Exception) {
-                // Handle exception
-            }
-        }
-    }
-    
-    // Navigate to specific cart pages with existing token
-    fun navigateToMyOrders() {
-        val accessToken = getStoredAccessToken() ?: return
+            ),
+            templateConfig = TemplateReplacementConfig(
+                customReplacements = mapOf(
+                    "{locale}" to Locale.getDefault().language,
+                    "{theme}" to getAppTheme()
+                )
+            ),
+            userId = userId,
+            campaignId = campaignId
+        )
         
-        val myOrderUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-            accessToken = accessToken,
-            path = "/myorder",
+        openWebView(enhancedUrl)
+    }
+}
+```
+
+### Advanced Redeem URL Building
+
+```kotlin
+class RedeemActivity : AppCompatActivity() {
+    
+    private fun buildAdvancedRedeemUrl(campaign: Campaign): String {
+        val redeemOptions = RedeemOptions(
+            color = colorSpinner.selectedItem?.toString(),
+            size = sizeSpinner.selectedItem?.toString(),
+            quantity = quantityPicker.value.toString(),
+            walletCard = getSelectedWalletCard()
+        )
+        
+        val urlOptions = UrlBuildOptions(
+            shouldShuffleToken = preferences.getBoolean("use_shuffled_token", true),
+            nativeHeader = false,
+            header = !preferences.getBoolean("hide_header", false),
             additionalParams = mapOf(
-                "sortBy" to "date",
-                "filter" to "active"
+                "source" to "mobile_app",
+                "version" to BuildConfig.VERSION_NAME,
+                "isAllianzMember" to if (isAllianzMember()) "Y" else "N",
+                "deviceType" to "smartphone"
             )
         )
         
-        openWebView(myOrderUrl)
-    }
-    
-    fun navigateToVouchers(category: String? = null) {
-        val accessToken = getStoredAccessToken() ?: return
-        
-        val additionalParams = category?.let { 
-            mapOf("category" to it) 
-        } ?: emptyMap()
-        
-        val voucherUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-            accessToken = accessToken,
-            path = "/voucher",
-            additionalParams = additionalParams
+        val templateConfig = TemplateReplacementConfig(
+            tokenPatterns = listOf("{token}", "<token>", "{auth_token}"),
+            customReplacements = mapOf(
+                "{promo_code}" to getCurrentPromoCode(),
+                "{referral_id}" to getReferralId(),
+                "{session_id}" to getSessionId()
+            )
         )
         
-        openWebView(voucherUrl)
+        return BuzzebeesSDK.instance().buildRedeemUrl(
+            campaign = campaign,
+            userId = getCurrentUserId(),
+            options = redeemOptions,
+            urlOptions = urlOptions,
+            templateConfig = templateConfig
+        )
+    }
+}
+```
+
+### Shopping Cart with Token Management
+
+```kotlin
+class ShoppingViewModel : ViewModel() {
+    private var accessToken: String? = null
+    
+    suspend fun initializeShoppingCart(): Boolean {
+        return try {
+            val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
+            
+            when (result) {
+                is ShoppingCartUrlBuildResult.Success -> {
+                    accessToken = result.result.accessToken
+                    _cartUrl.value = result.result.url
+                    true
+                }
+                is ShoppingCartUrlBuildResult.Error -> {
+                    _error.value = result.message
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            _error.value = "Failed to initialize shopping cart"
+            false
+        }
     }
     
-    fun navigateToSettings() {
-        val accessToken = getStoredAccessToken() ?: return
+    fun navigateToSection(section: String) {
+        val token = accessToken ?: return
         
-        val settingsUrl = BuzzebeesSDK.instance().buildFlexibleCartUrl(
-            accessToken = accessToken,
-            path = "/settings",
-            additionalParams = mapOf("tab" to "profile")
-        )
+        val url = when (section) {
+            "myorders" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
+                accessToken = token,
+                path = "/myorder",
+                additionalParams = mapOf("tab" to "active")
+            )
+            "vouchers" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
+                accessToken = token,
+                path = "/voucher"
+            )
+            "settings" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
+                accessToken = token,
+                path = "/settings"
+            )
+            else -> BuzzebeesSDK.instance().buildFlexibleCartUrl(token)
+        }
         
-        openWebView(settingsUrl)
+        _navigationUrl.value = url
     }
 }
 ```
@@ -571,220 +517,108 @@ class CampaignDetailViewModel : ViewModel() {
 
 ## Integration Patterns
 
-### Pattern 1: Repository Pattern
+### Pattern 1: URL Builder Service
+
+```kotlin
+class UrlBuilderService {
+    private val sdk = BuzzebeesSDK.instance()
+    
+    // Generic URL enhancement
+    fun enhanceUrl(
+        baseUrl: String,
+        userId: String? = null,
+        campaignId: String? = null,
+        additionalParams: Map<String, String> = emptyMap(),
+        customReplacements: Map<String, String> = emptyMap()
+    ): String {
+        return sdk.buildGenericUrl(
+            baseUrl = baseUrl,
+            urlOptions = UrlBuildOptions(
+                additionalParams = additionalParams
+            ),
+            templateConfig = TemplateReplacementConfig(
+                customReplacements = customReplacements
+            ),
+            userId = userId,
+            campaignId = campaignId
+        )
+    }
+    
+    // Specialized redeem URL
+    fun buildRedeemUrl(
+        campaign: Campaign,
+        userId: String,
+        options: Map<String, String> = emptyMap()
+    ): String {
+        val redeemOptions = RedeemOptions(
+            color = options["color"],
+            size = options["size"],
+            quantity = options["quantity"],
+            walletCard = options["wallet_card"]
+        )
+        
+        return sdk.buildRedeemUrl(
+            campaign = campaign,
+            userId = userId,
+            options = redeemOptions
+        )
+    }
+    
+    // Access token management
+    suspend fun getAccessToken(): String? {
+        val request = sdk.generateAccessTokenRequest()
+        return when (val result = sdk.requestAccessToken(request)) {
+            is AccessTokenResult.Success -> result.accessToken
+            is AccessTokenResult.Error -> null
+        }
+    }
+}
+```
+
+### Pattern 2: Repository Pattern with Enhanced URLs
 
 ```kotlin
 interface CampaignRepository {
-    fun getCampaignImageUrl(campaign: Campaign): String
-    fun getCampaignWebsiteUrl(campaign: Campaign): String
-    fun generateRedeemUrl(campaign: Campaign, userId: String, options: RedeemOptions): String
+    suspend fun getCampaignUrls(campaignId: String, userId: String): CampaignUrls
+    suspend fun buildCustomUrl(baseUrl: String, options: UrlOptions): String
 }
+
+data class CampaignUrls(
+    val imageUrl: String,
+    val redeemUrl: String,
+    val websiteUrl: String
+)
+
+data class UrlOptions(
+    val additionalParams: Map<String, String> = emptyMap(),
+    val customReplacements: Map<String, String> = emptyMap(),
+    val shouldShuffleToken: Boolean = true
+)
 
 class CampaignRepositoryImpl : CampaignRepository {
+    private val sdk = BuzzebeesSDK.instance()
     
-    override fun getCampaignImageUrl(campaign: Campaign): String {
-        return BuzzebeesSDK.instance().buildFullImageUrl(
-            image = campaign.imageUrl,
-            id = campaign.id
-        )
-    }
-    
-    override fun getCampaignWebsiteUrl(campaign: Campaign): String {
-        return BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
-    }
-    
-    override fun generateRedeemUrl(campaign: Campaign, userId: String, options: RedeemOptions): String {
-        return BuzzebeesSDK.instance().buildRedeemUrl(
-            campaign = campaign,
-            userId = userId,
-            options = options
-        )
-    }
-}
-```
-
-### Pattern 2: Use Case Pattern
-
-```kotlin
-class GetCampaignUrlsUseCase {
-    
-    data class CampaignUrls(
-        val imageUrl: String,
-        val websiteUrl: String,
-        val redeemUrl: String
-    )
-    
-    operator fun invoke(
-        campaign: Campaign,
-        userId: String,
-        redeemOptions: RedeemOptions = RedeemOptions()
-    ): CampaignUrls {
-        val sdk = BuzzebeesSDK.instance()
+    override suspend fun getCampaignUrls(campaignId: String, userId: String): CampaignUrls {
+        val campaign = getCampaign(campaignId)
         
         return CampaignUrls(
             imageUrl = sdk.buildFullImageUrl(campaign.imageUrl, campaign.id),
-            websiteUrl = sdk.buildWebsiteUrl(campaign),
-            redeemUrl = sdk.buildRedeemUrl(campaign, userId, redeemOptions)
+            redeemUrl = sdk.buildRedeemUrl(campaign, userId),
+            websiteUrl = campaign.websiteUrl // Or use buildGenericUrl for enhancement
         )
     }
-}
-
-// Usage in ViewModel
-class CampaignDetailViewModel : ViewModel() {
-    private val getCampaignUrls = GetCampaignUrlsUseCase()
     
-    fun loadCampaignUrls(campaign: Campaign, userId: String) {
-        val urls = getCampaignUrls(campaign, userId)
-        // Update UI state with URLs
-    }
-}
-```
-
-### Pattern 3: Extension Functions for Custom Models
-
-```kotlin
-// Extension functions on your own models
-fun Campaign.getImageUrl(): String {
-    return BuzzebeesSDK.instance().buildFullImageUrl(
-        image = this.imageUrl,
-        id = this.id
-    )
-}
-
-fun Campaign.getWebsiteUrl(): String {
-    return BuzzebeesSDK.instance().buildWebsiteUrl(this)
-}
-
-fun Campaign.getRedeemUrl(userId: String, options: RedeemOptions = RedeemOptions()): String {
-    return BuzzebeesSDK.instance().buildRedeemUrl(
-        campaign = this,
-        userId = userId,
-        options = options
-    )
-}
-
-// Usage
-val campaign = getCampaign()
-val imageUrl = campaign.getImageUrl()
-val redeemUrl = campaign.getRedeemUrl(userId, redeemOptions)
-```
-
-### Pattern 4: Shopping Cart Manager Pattern
-
-```kotlin
-class ShoppingCartManager {
-    private var cachedAccessToken: String? = null
-    private var tokenTimestamp: Long = 0
-    private val tokenValidityDuration = TimeUnit.HOURS.toMillis(2) // 2 hours
-    
-    suspend fun initializeCartAccess(): CartAccessResult {
-        return try {
-            // Check if we have a valid cached token
-            if (isTokenValid()) {
-                CartAccessResult.Success(cachedAccessToken!!)
-            } else {
-                // Get new access token using SDK defaults
-                val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-                
-                when (result) {
-                    is ShoppingCartUrlBuildResult.Success -> {
-                        cachedAccessToken = result.result.accessToken
-                        tokenTimestamp = System.currentTimeMillis()
-                        CartAccessResult.Success(result.result.accessToken)
-                    }
-                    is ShoppingCartUrlBuildResult.Error -> {
-                        CartAccessResult.Error(result.message)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            CartAccessResult.Error("Failed to initialize cart access: ${e.message}")
-        }
-    }
-    
-    private fun isTokenValid(): Boolean {
-        return cachedAccessToken != null && 
-               (System.currentTimeMillis() - tokenTimestamp) < tokenValidityDuration
-    }
-    
-    suspend fun navigateToCart(): String? {
-        return when (val result = initializeCartAccess()) {
-            is CartAccessResult.Success -> {
-                BuzzebeesSDK.instance().buildFlexibleCartUrl(result.accessToken)
-            }
-            is CartAccessResult.Error -> null
-        }
-    }
-    
-    suspend fun navigateToMyOrders(filters: Map<String, String> = emptyMap()): String? {
-        return when (val result = initializeCartAccess()) {
-            is CartAccessResult.Success -> {
-                BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                    accessToken = result.accessToken,
-                    path = "/myorder",
-                    additionalParams = filters
-                )
-            }
-            is CartAccessResult.Error -> null
-        }
-    }
-    
-    suspend fun navigateToVouchers(category: String? = null): String? {
-        return when (val result = initializeCartAccess()) {
-            is CartAccessResult.Success -> {
-                val params = category?.let { mapOf("category" to it) } ?: emptyMap()
-                BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                    accessToken = result.accessToken,
-                    path = "/voucher",
-                    additionalParams = params
-                )
-            }
-            is CartAccessResult.Error -> null
-        }
-    }
-    
-    suspend fun navigateToCustomPage(path: String, params: Map<String, String> = emptyMap()): String? {
-        return when (val result = initializeCartAccess()) {
-            is CartAccessResult.Success -> {
-                BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                    accessToken = result.accessToken,
-                    path = path,
-                    additionalParams = params
-                )
-            }
-            is CartAccessResult.Error -> null
-        }
-    }
-    
-    fun clearCache() {
-        cachedAccessToken = null
-        tokenTimestamp = 0
-    }
-    
-    sealed class CartAccessResult {
-        data class Success(val accessToken: String) : CartAccessResult()
-        data class Error(val message: String) : CartAccessResult()
-    }
-}
-
-// Usage in ViewModel
-class ShoppingViewModel : ViewModel() {
-    private val cartManager = ShoppingCartManager()
-    
-    fun openCart() {
-        viewModelScope.launch {
-            val cartUrl = cartManager.navigateToCart()
-            cartUrl?.let { openWebView(it) }
-        }
-    }
-    
-    fun openMyOrders() {
-        viewModelScope.launch {
-            val myOrderUrl = cartManager.navigateToMyOrders(
-                filters = mapOf("status" to "active", "limit" to "20")
+    override suspend fun buildCustomUrl(baseUrl: String, options: UrlOptions): String {
+        return sdk.buildGenericUrl(
+            baseUrl = baseUrl,
+            urlOptions = UrlBuildOptions(
+                shouldShuffleToken = options.shouldShuffleToken,
+                additionalParams = options.additionalParams
+            ),
+            templateConfig = TemplateReplacementConfig(
+                customReplacements = options.customReplacements
             )
-            myOrderUrl?.let { openWebView(it) }
-        }
+        )
     }
 }
 ```
@@ -793,219 +627,122 @@ class ShoppingViewModel : ViewModel() {
 
 ## Best Practices
 
-### 1. Cache URLs When Possible
+### 1. Use Generic URL Builder for Flexibility
 
 ```kotlin
-class CampaignUrlCache {
-    private val imageUrlCache = mutableMapOf<String, String>()
+// Instead of manual URL construction
+var url = baseUrl
+url = url.replace("{token}", getToken())
+url = url.replace("{userId}", userId)
+url += "&appName=" + getAppName()
+url += "&theme=" + getTheme()
+
+// Use generic URL builder
+val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = baseUrl,
+    urlOptions = UrlBuildOptions(
+        additionalParams = mapOf(
+            "appName" to getAppName(),
+            "theme" to getTheme()
+        )
+    ),
+    userId = userId
+)
+```
+
+### 2. Cache Access Tokens
+
+```kotlin
+class TokenManager {
+    private var cachedToken: String? = null
+    private var tokenExpiry: Long = 0
     
-    fun getCampaignImageUrl(campaign: Campaign): String {
-        val cacheKey = "${campaign.id}_${campaign.imageUrl}"
-        return imageUrlCache.getOrPut(cacheKey) {
-            BuzzebeesSDK.instance().buildFullImageUrl(
-                image = campaign.imageUrl,
-                id = campaign.id
-            )
+    suspend fun getValidToken(): String? {
+        if (isTokenValid()) {
+            return cachedToken
+        }
+        
+        return when (val result = BuzzebeesSDK.instance().requestAccessToken(generateRequest())) {
+            is AccessTokenResult.Success -> {
+                cachedToken = result.accessToken
+                tokenExpiry = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(2)
+                result.accessToken
+            }
+            is AccessTokenResult.Error -> null
         }
     }
-}
-```
-
-### 2. Handle Null/Empty Campaigns Gracefully
-
-```kotlin
-fun Campaign?.getSafeImageUrl(): String {
-    return if (this != null) {
-        BuzzebeesSDK.instance().buildFullImageUrl(
-            image = this.imageUrl,
-            id = this.id
-        )
-    } else {
-        "" // or default image URL
-    }
-}
-
-fun Campaign?.getSafeRedeemUrl(userId: String?, options: RedeemOptions = RedeemOptions()): String? {
-    return if (this != null && userId != null) {
-        BuzzebeesSDK.instance().buildRedeemUrl(
-            campaign = this,
-            userId = userId,
-            options = options
-        )
-    } else {
-        null
-    }
-}
-```
-
-### 3. Use Default Options
-
-```kotlin
-object DefaultRedeemOptions {
-    fun standard() = RedeemOptions(
-        quantity = 1,
-        color = "default",
-        size = "medium"
-    )
     
-    fun premium(promoCode: String) = RedeemOptions(
-        quantity = 1,
-        customData = mapOf("promo" to promoCode, "tier" to "premium")
-    )
+    private fun isTokenValid(): Boolean {
+        return cachedToken != null && System.currentTimeMillis() < tokenExpiry
+    }
+}
+```
+
+### 3. Configure Template Replacements Globally
+
+```kotlin
+object UrlConfig {
+    fun getStandardTemplateConfig(): TemplateReplacementConfig {
+        return TemplateReplacementConfig(
+            tokenPatterns = listOf("{token}", "<token>", "{auth_token}"),
+            customReplacements = mapOf(
+                "{app_version}" to BuildConfig.VERSION_NAME,
+                "{platform}" to "android",
+                "{locale}" to Locale.getDefault().language
+            )
+        )
+    }
+    
+    fun getStandardUrlOptions(): UrlBuildOptions {
+        return UrlBuildOptions(
+            shouldShuffleToken = true,
+            nativeHeader = false,
+            header = true,
+            additionalParams = mapOf(
+                "source" to "mobile_app",
+                "platform" to "android"
+            )
+        )
+    }
 }
 
 // Usage
-val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
-    campaign = campaign,
-    userId = userId,
-    options = DefaultRedeemOptions.premium("SUMMER2024")
+val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = baseUrl,
+    urlOptions = UrlConfig.getStandardUrlOptions(),
+    templateConfig = UrlConfig.getStandardTemplateConfig(),
+    userId = userId
 )
 ```
 
 ### 4. Error Handling
 
 ```kotlin
-fun buildSafeRedeemUrl(
-    campaign: Campaign?,
-    userId: String?,
-    options: RedeemOptions = RedeemOptions()
-): String? {
+suspend fun buildUrlSafely(baseUrl: String, userId: String?): String? {
     return try {
-        if (campaign != null && userId != null) {
-            BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
-        } else {
-            null
-        }
+        BuzzebeesSDK.instance().buildGenericUrl(
+            baseUrl = baseUrl,
+            userId = userId
+        )
     } catch (e: Exception) {
-        Log.e("URLBuilder", "Failed to build redeem URL", e)
+        Log.e("UrlBuilder", "Failed to build URL", e)
         null
     }
 }
-```
 
-### 5. Testing URL Generation
-
-```kotlin
-class CampaignUrlTest {
-    
-    @Test
-    fun `test campaign image URL generation`() {
-        // Given
-        val campaign = Campaign(
-            id = "test_123",
-            imageUrl = "test-image.jpg"
-        )
-        
-        // When
-        val imageUrl = BuzzebeesSDK.instance().buildFullImageUrl(
-            image = campaign.imageUrl,
-            id = campaign.id
-        )
-        
-        // Then
-        assertTrue(imageUrl.contains("test-image.jpg"))
-        assertTrue(imageUrl.startsWith("https://"))
-    }
-}
-```
-
-### 6. Shopping Cart Best Practices
-
-```kotlin
-// 1. Check availability before using cart features
-fun initializeShoppingCart() {
-    if (!BuzzebeesSDK.instance().isShoppingCartAvailable()) {
-        // Handle missing configuration
-        showError("Shopping cart is not available. Please check configuration.")
-        return
-    }
-    
-    // Proceed with cart initialization
-}
-
-// 2. Cache access tokens with expiration
-class CartTokenManager {
-    private val preferences = getSharedPreferences("cart_prefs", Context.MODE_PRIVATE)
-    
-    fun saveToken(token: String) {
-        preferences.edit()
-            .putString("access_token", token)
-            .putLong("token_timestamp", System.currentTimeMillis())
-            .apply()
-    }
-    
-    fun getValidToken(): String? {
-        val token = preferences.getString("access_token", null)
-        val timestamp = preferences.getLong("token_timestamp", 0)
-        val maxAge = TimeUnit.HOURS.toMillis(2) // 2 hours
-        
-        return if (token != null && (System.currentTimeMillis() - timestamp) < maxAge) {
-            token
-        } else {
-            null
-        }
-    }
-}
-
-// 3. Handle network errors gracefully
-suspend fun buildCartUrlSafely(): String? {
+suspend fun getAccessTokenSafely(): String? {
     return try {
-        val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-        when (result) {
-            is ShoppingCartUrlBuildResult.Success -> {
-                result.result.url
-            }
-            is ShoppingCartUrlBuildResult.Error -> {
-                // Log error for debugging
-                Timber.e("Cart URL build failed: ${result.message}")
-                
-                // Show user-friendly message
-                when {
-                    result.message.contains("network", ignoreCase = true) -> {
-                        showError("Network error. Please check your connection.")
-                    }
-                    result.message.contains("configuration", ignoreCase = true) -> {
-                        showError("Service temporarily unavailable.")
-                    }
-                    else -> {
-                        showError("Unable to access shopping cart.")
-                    }
-                }
+        val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
+        when (val result = BuzzebeesSDK.instance().requestAccessToken(request)) {
+            is AccessTokenResult.Success -> result.accessToken
+            is AccessTokenResult.Error -> {
+                Log.e("Token", "Failed to get access token: ${result.message}")
                 null
             }
         }
     } catch (e: Exception) {
-        Timber.e(e, "Exception building cart URL")
-        showError("Unexpected error occurred.")
+        Log.e("Token", "Exception getting access token", e)
         null
-    }
-}
-
-// 4. Validate configuration at app startup
-class AppInitializer {
-    fun validateSDKConfiguration() {
-        val sdk = BuzzebeesSDK.instance()
-        val configs = sdk.servicesConfigs()
-        
-        val issues = mutableListOf<String>()
-        
-        if (configs.webShoppingUrl.isNullOrEmpty()) {
-            issues.add("webShoppingUrl not configured")
-        }
-        if (configs.appId.isNullOrEmpty()) {
-            issues.add("appId not configured")
-        }
-        if (configs.appName.isNullOrEmpty()) {
-            issues.add("appName not configured")
-        }
-        if (configs.urlSchemesMainProject.isNullOrEmpty()) {
-            issues.add("urlSchemesMainProject not configured")
-        }
-        
-        if (issues.isNotEmpty()) {
-            Timber.w("SDK Configuration Issues: ${issues.joinToString(", ")}")
-            // Consider disabling cart features
-        }
     }
 }
 ```
@@ -1016,200 +753,148 @@ class AppInitializer {
 
 ### Common Issues and Solutions
 
-#### 1. Empty or Null URLs
+#### 1. Template Replacement Not Working
 
-**Problem**: URL builder returns empty strings or null values
-
-**Solution**: 
-```kotlin
-// Check SDK initialization
-if (!BuzzebeesSDK.isInitialized()) {
-    // Initialize SDK first
-    BuzzebeesSDK.init(context)
-}
-
-// Verify campaign data
-if (campaign?.imageUrl.isNullOrEmpty()) {
-    // Use default image URL or handle gracefully
-    return defaultImageUrl
-}
-```
-
-#### 2. Authentication Token Missing
-
-**Problem**: Profile image URLs don't include authentication tokens
+**Problem**: Custom patterns like `{custom_param}` not being replaced
 
 **Solution**:
 ```kotlin
-// Ensure user is authenticated
-val authProvider = BuzzebeesSDK.instance().authProvider()
-if (!authProvider.hasAuthToken()) {
-    // Authenticate user first
-    authenticateUser()
-}
+val templateConfig = TemplateReplacementConfig(
+    customReplacements = mapOf(
+        "{custom_param}" to "custom_value",
+        "<custom_param>" to "custom_value" // Support both patterns
+    )
+)
 
-// Then build profile URL
-val profileUrl = BuzzebeesSDK.instance().buildProfileImageUrl(userId)
+val url = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = baseUrl,
+    templateConfig = templateConfig
+)
 ```
 
-#### 3. Incorrect Base URLs
+#### 2. Access Token Request Fails
 
-**Problem**: Generated URLs use wrong base URLs
+**Problem**: `requestAccessToken` returns error
 
 **Solution**:
 ```kotlin
 // Check SDK configuration
-val configs = BuzzebeesSDK.instance().servicesConfigs()
-Log.d("URLBuilder", "Base URL: ${configs.baseUrl}")
-
-// Verify buzzebees-service.json configuration
-// Ensure correct environment configuration (staging/production)
-```
-
-#### 4. Shopping Cart Configuration Issues
-
-**Problem**: Shopping cart URLs fail to build due to missing configuration
-
-**Solution**:
-```kotlin
-// Check shopping cart availability first
 if (!BuzzebeesSDK.instance().isShoppingCartAvailable()) {
-    Log.e("ShoppingCart", "Missing required configuration:")
-    val configs = BuzzebeesSDK.instance().servicesConfigs()
-    if (configs.webShoppingUrl.isNullOrEmpty()) Log.e("ShoppingCart", "- webShoppingUrl")
-    if (configs.appId.isNullOrEmpty()) Log.e("ShoppingCart", "- appId")
-    if (configs.appName.isNullOrEmpty()) Log.e("ShoppingCart", "- appName")
-    if (configs.urlSchemesMainProject.isNullOrEmpty()) Log.e("ShoppingCart", "- urlSchemesMainProject")
-    
-    // Handle missing configuration
-    return
+    // Missing configuration
+    Log.e("Token", "Shopping cart configuration missing")
 }
 
-// Proceed with cart operations
+// Verify network connectivity
+// Check appId and appName in SDK configuration
+val configs = BuzzebeesSDK.instance().servicesConfigs()
+Log.d("Token", "App ID: ${configs.appId}, App Name: ${configs.appName}")
 ```
 
-#### 5. Redeem URL Parameters Missing
+#### 3. Token Shuffling Issues
 
-**Problem**: Redeem URLs don't include expected parameters
+**Problem**: Token shuffling not working as expected
 
 **Solution**:
 ```kotlin
-// Explicitly set redeem options
-val options = RedeemOptions(
-    color = "red",
-    size = "L",
-    quantity = 2,
-    customData = mapOf(
-        "promo" to "DISCOUNT20",
-        "source" to "mobile_app"
+// Disable token shuffling if needed
+val urlOptions = UrlBuildOptions(
+    shouldShuffleToken = false // Use original token
+)
+
+// Or debug token shuffling
+val originalToken = BuzzebeesSDK.instance().authProvider().getAuthToken()
+Log.d("Token", "Original token: $originalToken")
+
+val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = baseUrl,
+    urlOptions = urlOptions
+)
+```
+
+#### 4. Shopping Cart URLs Not Working
+
+**Problem**: Cart URLs return 404 or access denied
+
+**Solution**:
+```kotlin
+// Verify base cart URL configuration
+val configs = BuzzebeesSDK.instance().servicesConfigs()
+Log.d("Cart", "Web shopping URL: ${configs.webShoppingUrl}")
+
+// Check access token validity
+suspend fun validateToken(token: String): Boolean {
+    // Try to use token in a simple cart API call
+    // Return true if successful, false otherwise
+}
+
+// Use fresh token
+val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
+when (result) {
+    is ShoppingCartUrlBuildResult.Success -> {
+        if (validateToken(result.result.accessToken)) {
+            // Token is valid
+        }
+    }
+    is ShoppingCartUrlBuildResult.Error -> {
+        // Handle error
+    }
+}
+```
+
+---
+
+## Summary of Changes
+
+### 🆕 New Features
+
+1. **Generic URL Builder**: `buildGenericUrl()` for flexible URL enhancement
+2. **Template Replacement Config**: Configurable patterns and custom replacements
+3. **URL Build Options**: Enhanced parameter handling and token control
+4. **Generic Access Token System**: Reusable access token management
+5. **Enhanced Shopping Cart**: Better URL options and error handling
+
+### ✅ Improved Features
+
+1. **Flexible Template Patterns**: Support for both `{pattern}` and `<pattern>` styles
+2. **Enhanced Parameter Management**: More control over URL parameters
+3. **Better Error Handling**: Comprehensive error types and messages
+4. **Token Control**: Choose between shuffled and original tokens
+5. **Backward Compatibility**: All existing functionality preserved
+
+### 🔧 Migration Guide
+
+**Old Code**:
+```kotlin
+// Manual URL building
+var url = baseUrl.replace("{token}", token)
+url += "&appName=" + appName
+```
+
+**New Code**:
+```kotlin
+// Generic URL builder
+val url = BuzzebeesSDK.instance().buildGenericUrl(
+    baseUrl = baseUrl,
+    urlOptions = UrlBuildOptions(
+        additionalParams = mapOf("appName" to appName)
     )
 )
-
-val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
-    campaign = campaign,
-    userId = userId,
-    options = options
-)
-
-Log.d("URLBuilder", "Redeem URL: $redeemUrl")
 ```
 
-### Debug Logging
-
-Enable debug logging to troubleshoot URL generation:
-
-```kotlin
-// Check what URLs are being generated
-val imageUrl = BuzzebeesSDK.instance().buildFullImageUrl(image, id)
-Log.d("URLBuilder", "Generated image URL: $imageUrl")
-
-val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
-Log.d("URLBuilder", "Generated redeem URL: $redeemUrl")
-
-// Check URL builder configuration
-val urlBuilder = BuzzebeesSDK.instance().urlBuilder
-Log.d("URLBuilder", "URL Builder configs: ${urlBuilder.configs}")
-
-// Debug shopping cart configuration
-val configs = BuzzebeesSDK.instance().servicesConfigs()
-Log.d("ShoppingCart", "Cart Config - webShoppingUrl: ${configs.webShoppingUrl}")
-Log.d("ShoppingCart", "Cart Config - appName: ${configs.appName}")
-Log.d("ShoppingCart", "Cart Config - urlSchemesMainProject: ${configs.urlSchemesMainProject}")
-```
+The new URL building system provides maximum flexibility while maintaining backward compatibility with existing code.
 
 ---
 
 ## Conclusion
 
-The URL Builder Extensions provide a powerful and convenient way to generate URLs for various Buzzebees services, including comprehensive shopping cart functionality. By following the patterns and best practices outlined in this guide, you can create robust URL generation that handles authentication, configuration, and parameter management automatically.
+The enhanced URL Builder Extensions provide powerful and flexible URL generation for all Buzzebees services. The new generic URL builder and access token management system offer unprecedented flexibility while maintaining ease of use.
 
 Key advantages:
-- **Automatic Configuration**: No manual URL construction required
-- **Type Safety**: Strongly typed parameters prevent errors
-- **Authentication Handling**: Automatic token inclusion where needed
-- **Template Processing**: Smart URL template replacement
-- **Shopping Cart Integration**: Complete cart URL management with token handling
-- **Easy Integration**: Simple extension functions on the main SDK
-
-### 🆕 CampaignDetails Support
-
-The URL Builder Extensions now support `CampaignDetails` objects for enhanced URL building:
-
-#### Enhanced Website URLs
-```kotlin
-// Standard Campaign
-val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaign)
-
-// 🆕 CampaignDetails with automatic parameters
-val campaignDetails = CampaignDetails(id = 123, website = "https://example.com", categoryID = 5, type = 1, agencyID = 10)
-val enhancedWebsiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails)
-// Returns: "https://example.com?campaign_id=123&category_id=5&campaign_type=1&agency_id=10"
-```
-
-#### Enhanced Redeem URLs
-```kotlin
-// Standard Campaign
-val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaign, userId, options)
-
-// 🆕 CampaignDetails support
-val campaignDetails = getCampaignDetails()
-val enhancedRedeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(campaignDetails, userId, options)
-// Uses comprehensive CampaignDetails data with full URL building logic
-```
-
-#### Usage Examples with CampaignDetails
-```kotlin
-class CampaignDetailActivity : AppCompatActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        val campaignDetails = getCampaignDetailsFromIntent()
-        val userId = getCurrentUserId()
-        
-        // Enhanced website URL with automatic parameters
-        websiteButton.setOnClickListener {
-            val websiteUrl = BuzzebeesSDK.instance().buildWebsiteUrl(campaignDetails)
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl)))
-        }
-        
-        // Enhanced redeem URL with CampaignDetails
-        redeemButton.setOnClickListener {
-            val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
-                campaignDetails = campaignDetails,
-                userId = userId,
-                options = getRedeemOptions()
-            )
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(redeemUrl)))
-        }
-    }
-}
-```
-
-The CampaignDetails support provides automatic parameter inclusion for:
-- Campaign ID (`campaign_id`)
-- Category ID (`category_id`) 
-- Campaign Type (`campaign_type`)
-- Agency ID (`agency_id`)
+- **🆕 Generic URL Building**: Handle any URL with template replacement
+- **🆕 Flexible Access Tokens**: Reusable token system for multiple services
+- **Enhanced Template Processing**: Configurable patterns and replacements
+- **Better Parameter Management**: More control over URL parameters
+- **Improved Error Handling**: Comprehensive error reporting
+- **Backward Compatibility**: All existing functionality preserved
 
 For additional implementation details, refer to the `BuzzebeesSDK_UrlExtension.kt` source file.

@@ -140,7 +140,42 @@ val paymentApi = BuzzebeesSDK.instance().customApiBuilder()
     .build(PaymentApi::class.java)
 ```
 
-### 2.24 Error Handling System
+### 2.24 Image Loading with Authentication ⭐ **NEW**
+
+The Buzzebees SDK provides `BuzzebeesSDKImageHeaders` for automatic authentication when loading images from Buzzebees API. Supports popular image loading libraries and manual loading.
+
+| Component                    | Description                                                                                  | Guide Link                                     |
+|------------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------|
+| **Image Loading Guide**      | Complete guide for loading Buzzebees images with authentication using Coil, Glide, Picasso | [source](docs/readme/IMAGE_LOADING_GUIDE.md) |
+
+#### Quick Start - Image Loading
+
+```kotlin
+// 1. With Coil (Setup once in Application class)
+class MyApplication : Application(), ImageLoaderFactory {
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this)
+            .okHttpClient {
+                OkHttpClient.Builder()
+                    .addInterceptor(BuzzebeesSDKImageHeaders.createInterceptor())
+                    .build()
+            }
+            .build()
+    }
+}
+
+// Usage
+val profileUrl = BuzzebeesSDK.instance().buildProfileImageUrl("BZD_00001280200")
+imageView.load(profileUrl)
+
+// 2. Without external library
+val client = OkHttpClient.Builder()
+    .addInterceptor(BuzzebeesSDKImageHeaders.createInterceptor())
+    .build()
+// Use with your custom image loading solution
+```
+
+### 2.25 Error Handling System
 
 The Buzzebees SDK includes comprehensive error handling documentation to help developers create
 production-ready applications with excellent user experience.
