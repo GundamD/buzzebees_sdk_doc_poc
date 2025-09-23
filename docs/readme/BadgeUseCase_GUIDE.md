@@ -23,7 +23,7 @@ fetch user progress, achievement status, and badge information for gamification 
 |------------|-------------------------|-----------|-----------|
 | badgeId    | Unique badge identifier | M         | String    |
 
-- Response (`List<Badge>`)
+- Response (`List<Badge>`)  
   HTTP status: 200
 
 > **Badge Fields Reference**

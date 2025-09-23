@@ -1,18 +1,18 @@
 ## AddressInformationUseCase Guide
 
-This guide shows how to initialize and use every public method in `AddressInformationUseCase`, with suspend and callback examples where available. The AddressInformationUseCase provides geographic location data for building address hierarchies, particularly for Thai administrative divisions.
+This guide shows how to initialize and use every public method in `AddressInformationUseCase`, with suspend and callback examples where available. The AddressInformationUseCase provides geographic information services including provinces, districts, sub-districts, and countries data for address form population and validation.
 
 ### Getting an instance
 
 ```kotlin
-val addressInfoService = BuzzebeesSDK.instance().addressInformationUseCase
+val addressInformationService = BuzzebeesSDK.instance().addressInformation
 ```
 
 ---
 
 ### getProvinceList
 
-Retrieves a list of all provinces (top-level administrative divisions).
+Retrieves a list of all available provinces. Used for populating province dropdowns in address forms and validation.
 
 - Request (caller-supplied)
 
@@ -21,6 +21,7 @@ Retrieves a list of all provinces (top-level administrative divisions).
 | -          | None        | -         | -         |
 
 - Response (`List<Province>`)
+
   HTTP status: 200
 
 > **Province Fields Reference**
@@ -31,19 +32,19 @@ Retrieves a list of all provinces (top-level administrative divisions).
 
 ```kotlin
 // Suspend
-val result = addressInfoService.getProvinceList()
+val result = addressInformationService.getProvinceList()
 
 // Callback
-addressInfoService.getProvinceList { result ->
+addressInformationService.getProvinceList { result ->
     when (result) {
         is AddressInformationResult.SuccessProvince -> {
             // Handle successful province list retrieval
             val provinces = result.result
             provinces.forEach { province ->
-                val code = province.provinceCode
-                val nameTH = province.provinceName
-                val nameEN = province.provinceNameEN
-                println("Province: $nameTH ($nameEN) - Code: $code")
+                val provinceCode = province.provinceCode
+                val provinceName = province.provinceName
+                val provinceNameEN = province.provinceNameEN
+                // Populate dropdown or spinner
             }
         }
         is AddressInformationResult.Error -> {
@@ -59,15 +60,16 @@ addressInfoService.getProvinceList { result ->
 
 ### getDistrictList
 
-Retrieves a list of districts (second-level administrative divisions) within a specific province.
+Retrieves a list of districts within a specific province. Used for populating district dropdowns after a province is selected.
 
 - Request (caller-supplied)
 
-| Field Name   | Description   | Mandatory | Data Type |
-|--------------|---------------|-----------|-----------|
-| provinceCode | Province code | M         | String    |
+| Field Name   | Description              | Mandatory | Data Type |
+|--------------|--------------------------|-----------|-----------|
+| provinceCode | Province code to filter  | M         | String    |
 
-- Response (`List<District>`) 
+- Response (`List<District>`)
+
   HTTP status: 200
 
 > **District Fields Reference**
@@ -78,20 +80,20 @@ Retrieves a list of districts (second-level administrative divisions) within a s
 
 ```kotlin
 // Suspend
-val result = addressInfoService.getDistrictList("10") // Bangkok province code
+val result = addressInformationService.getDistrictList("10") // Bangkok province code
 
 // Callback
-addressInfoService.getDistrictList("10") { result ->
+addressInformationService.getDistrictList("10") { result ->
     when (result) {
         is AddressInformationResult.SuccessDistrict -> {
             // Handle successful district list retrieval
             val districts = result.result
             districts.forEach { district ->
-                val code = district.districtCode
-                val nameTH = district.districtName
-                val nameEN = district.districtNameEN
+                val districtCode = district.districtCode
+                val districtName = district.districtName
+                val districtNameEN = district.districtNameEN
                 val provinceCode = district.provinceCode
-                println("District: $nameTH ($nameEN) - Code: $code, Province: $provinceCode")
+                // Update district dropdown
             }
         }
         is AddressInformationResult.Error -> {
@@ -107,16 +109,17 @@ addressInfoService.getDistrictList("10") { result ->
 
 ### getSubDistrict
 
-Retrieves a list of sub-districts (third-level administrative divisions) within a specific district and province.
+Retrieves a list of sub-districts within a specific district and province. Used for populating sub-district dropdowns after district selection.
 
 - Request (caller-supplied)
 
-| Field Name   | Description   | Mandatory | Data Type |
-|--------------|---------------|-----------|-----------|
-| provinceCode | Province code | M         | String    |
-| districtCode | District code | M         | String    |
+| Field Name   | Description              | Mandatory | Data Type |
+|--------------|--------------------------|-----------|-----------|
+| provinceCode | Province code            | M         | String    |
+| districtCode | District code to filter  | M         | String    |
 
-- Response (`List<SubDistrict>`) 
+- Response (`List<SubDistrict>`)
+
   HTTP status: 200
 
 > **SubDistrict Fields Reference**
@@ -127,20 +130,20 @@ Retrieves a list of sub-districts (third-level administrative divisions) within 
 
 ```kotlin
 // Suspend
-val result = addressInfoService.getSubDistrict("10", "1001") // Bangkok, Pathumwan
+val result = addressInformationService.getSubDistrict("10", "1001") // Bangkok, Pathumwan
 
 // Callback
-addressInfoService.getSubDistrict("10", "1001") { result ->
+addressInformationService.getSubDistrict("10", "1001") { result ->
     when (result) {
         is AddressInformationResult.SuccessSubDistrict -> {
             // Handle successful sub-district list retrieval
             val subDistricts = result.result
             subDistricts.forEach { subDistrict ->
-                val code = subDistrict.subDistrictCode
-                val name = subDistrict.subDistrictName
+                val subDistrictCode = subDistrict.subDistrictCode
+                val subDistrictName = subDistrict.subDistrictName
                 val city = subDistrict.city
                 val zipCode = subDistrict.zipCode
-                println("SubDistrict: $name - Code: $code, City: $city, Zip: $zipCode")
+                // Update sub-district dropdown and auto-fill zip code
             }
         }
         is AddressInformationResult.Error -> {
@@ -154,69 +157,134 @@ addressInfoService.getSubDistrict("10", "1001") { result ->
 
 ---
 
-## Entity Fields Reference
+### getCountries
 
-### Province Entity
+Retrieves a list of all available countries. Used for international address support and country selection.
 
-The Province entity represents top-level administrative divisions with the following fields:
+- Request (caller-supplied)
 
-| Field Name     | Description                    | Data Type | JSON Field        |
-|----------------|--------------------------------|-----------|-------------------|
-| provinceCode   | Unique province identifier     | String?   | province_code     |
-| provinceName   | Province name in Thai          | String?   | province_name     |
-| provinceNameEN | Province name in English       | String?   | province_name_eng |
+| Field Name | Description | Mandatory | Data Type |
+|------------|-------------|-----------|-----------|
+| -          | None        | -         | -         |
+
+- Response (`List<Country>`)
+
+  HTTP status: 200
+
+> **Country Fields Reference**
+>
+> See the complete Country entity fields table below for all available properties.
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressInformationService.getCountries()
+
+// Callback
+addressInformationService.getCountries { result ->
+    when (result) {
+        is AddressInformationResult.SuccessCountries -> {
+            // Handle successful countries list retrieval
+            val countries = result.result
+            countries.forEach { country ->
+                val countryId = country.countryId
+                val countryCode = country.countryCode
+                val countryName = country.countryName
+                // Populate country dropdown
+            }
+        }
+        is AddressInformationResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+## Geographic Entity Fields Reference
+
+The AddressInformationUseCase returns several geographic entities for building comprehensive address forms:
+
+### Province Entity Fields
+
+| Field Name       | Description                    | Data Type | Usage Context                    |
+|------------------|--------------------------------|-----------|----------------------------------|
+| provinceCode     | Unique province identifier     | String?   | Province selection, filtering    |
+| provinceName     | Province name in local language| String?   | Display in Thai/local language   |
+| provinceNameEN   | Province name in English       | String?   | English interface support        |
 
 **Example Province Data:**
 ```json
 {
-  "province_code": "10",
-  "province_name": "กรุงเทพมหานคร",
-  "province_name_eng": "Bangkok"
+  "provinceCode": "10",
+  "provinceName": "กรุงเทพมหานคร",
+  "provinceNameEN": "Bangkok"
 }
 ```
 
-### District Entity
+### District Entity Fields
 
-The District entity represents second-level administrative divisions with the following fields:
-
-| Field Name     | Description                    | Data Type | JSON Field       |
-|----------------|--------------------------------|-----------|------------------|
-| districtCode   | Unique district identifier     | String?   | district_code    |
-| districtName   | District name in Thai          | String?   | district_name    |
-| districtNameEN | District name in English       | String?   | district_name_EN |
-| provinceCode   | Parent province identifier     | String?   | province_code    |
+| Field Name       | Description                    | Data Type | Usage Context                    |
+|------------------|--------------------------------|-----------|----------------------------------|
+| districtCode     | Unique district identifier     | String?   | District selection, filtering    |
+| districtName     | District name in local language| String?   | Display in Thai/local language   |
+| districtNameEN   | District name in English       | String?   | English interface support        |
+| provinceCode     | Parent province identifier     | String?   | Hierarchy relationship           |
 
 **Example District Data:**
 ```json
 {
-  "district_code": "1001",
-  "district_name": "ปทุมวัน",
-  "district_name_EN": "Pathumwan",
-  "province_code": "10"
+  "districtCode": "1001",
+  "districtName": "ปทุมวัน",
+  "districtNameEN": "Pathumwan",
+  "provinceCode": "10"
 }
 ```
 
-### SubDistrict Entity
+### SubDistrict Entity Fields
 
-The SubDistrict entity represents third-level administrative divisions with the following fields:
-
-| Field Name        | Description                    | Data Type | JSON Field        |
-|-------------------|--------------------------------|-----------|-------------------|
-| subDistrictCode   | Unique sub-district identifier | String?   | subdistrict_code  |
-| subDistrictName   | Sub-district name in Thai      | String?   | subdistrict_name  |
-| city              | City name                      | String?   | city              |
-| zipCode           | Postal code                    | String?   | zip_code          |
+| Field Name       | Description                    | Data Type | Usage Context                    |
+|------------------|--------------------------------|-----------|----------------------------------|
+| subDistrictCode  | Unique sub-district identifier | String?   | Sub-district selection, filtering|
+| subDistrictName  | Sub-district name              | String?   | Display in forms                 |
+| city             | City name                      | String?   | Additional location context      |
+| zipCode          | Postal code                    | String?   | Auto-fill zip code fields        |
 
 **Example SubDistrict Data:**
 ```json
 {
-  "subdistrict_code": "100101",
-  "subdistrict_name": "ลุมพินี",
+  "subDistrictCode": "100101",
+  "subDistrictName": "ลุมพินี",
   "city": "กรุงเทพมหานคร",
-  "zip_code": "10330"
+  "zipCode": "10330"
 }
 ```
 
+### Country Entity Fields
+
+| Field Name       | Description                    | Data Type | Usage Context                    |
+|------------------|--------------------------------|-----------|----------------------------------|
+| countryId        | Unique country identifier      | String?   | Country selection, reference     |
+| countryCode      | ISO country code               | String?   | International standards          |
+| countryName      | Country name                   | String?   | Display in forms                 |
+
+**Example Country Data:**
+```json
+{
+  "countryId": "764",
+  "countryCode": "TH",
+  "countryName": "Thailand"
+}
+```
+
+---
+
 ## Summary
 
-The AddressInformationUseCase provides essential geographic data services for building robust address management systems. It offers a hierarchical approach to Thai administrative divisions with bilingual support (Thai/English), making it ideal for applications serving both local and international users. The service integrates seamlessly with the AddressUseCase to provide complete address lifecycle management with proper validation and standardization.
+The AddressInformationUseCase provides essential geographic information services for building comprehensive address forms. It supports hierarchical data loading (Province → District → Sub-district) with automatic zip code population, making it ideal for creating user-friendly address input experiences. The UseCase supports both suspend and callback patterns, making it suitable for various architectural approaches while maintaining consistent error handling and data structure throughout the geographic hierarchy.
+
+The service is particularly valuable for applications requiring accurate Thai address data, with built-in support for both local and English language names.

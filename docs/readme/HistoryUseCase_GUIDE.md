@@ -200,6 +200,72 @@ historyService.getHistoryUse("redeem_key_from_purchase_history") { result ->
 
 ---
 
+### getRedeemAddress
+
+Retrieves redemption address information for delivery or pickup purposes.
+
+- Request (caller-supplied)
+
+| Field Name | Description                               | Mandatory | Data Type |
+|------------|-------------------------------------------|-----------|-----------||
+| redeemKey  | Unique redemption key from purchase       | M         | String    |
+| locale     | Locale for address formatting (optional)  | O         | Int?      |
+
+- Response (`ResponseBody`) - Raw address data response
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend - with default locale
+val result = historyService.getRedeemAddress("redeem_key_12345")
+
+// Suspend - with specific locale
+val result = historyService.getRedeemAddress(
+    redeemKey = "redeem_key_12345",
+    locale = 1054 // Thai locale
+)
+
+// Callback
+historyService.getRedeemAddress(
+    redeemKey = "redeem_key_from_history",
+    locale = 1033 // English locale
+) { result ->
+    when (result) {
+        is HistoryResult.SuccessRedeemAddressRaw -> {
+            // Handle successful address retrieval
+            val addressData = result.result
+            
+            // Parse the response body as needed
+            val addressString = addressData.string()
+            println("Redemption address data: $addressString")
+            
+            // Note: Response format may vary depending on the redemption type
+            // Parse according to your application's requirements
+        }
+        is HistoryResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+            
+            when (errorCode) {
+                "REDEEM_KEY_NOT_FOUND" -> {
+                    // Handle redemption key not found
+                }
+                "ADDRESS_NOT_AVAILABLE" -> {
+                    // Handle no address information available
+                }
+                "DELIVERY_NOT_REQUIRED" -> {
+                    // Handle campaigns that don't require delivery
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
 ## Summary
 
 The HistoryUseCase provides comprehensive purchase and redemption history management functionality within the Buzzebees SDK. It offers detailed filtering capabilities, pagination support, and campaign usage functionality for tracking purchase history and voucher usage.

@@ -1,11 +1,11 @@
 ## AddressUseCase Guide
 
-This guide shows how to initialize and use every public method in `AddressUseCase`, with suspend and callback examples where available. The AddressUseCase provides comprehensive address management functionality including regular addresses and tax addresses.
+This guide shows how to initialize and use every public method in `AddressUseCase`, with suspend and callback examples where available. The AddressUseCase provides comprehensive address management functionality including regular addresses, tax addresses, and location information services.
 
 ### Getting an instance
 
 ```kotlin
-val addressService = BuzzebeesSDK.instance().addressUseCase
+val addressService = BuzzebeesSDK.instance().address
 ```
 
 ---
@@ -99,59 +99,20 @@ addressService.getAddressDetail("address-key-123") { result ->
 
 ---
 
-### deleteAddress
+### addAddress
 
-Deletes a specific address using its key.
-
-- Request (caller-supplied)
-
-| Field Name | Description  | Mandatory | Data Type |
-|------------|--------------|-----------|-----------|
-| key        | Address key  | M         | String    |
-
-- Response (`Address`) 
-  HTTP status: 200
-
-- Usage
-
-```kotlin
-// Suspend
-val result = addressService.deleteAddress("address-key-123")
-
-// Callback
-addressService.deleteAddress("address-key-123") { result ->
-    when (result) {
-        is AddressResult.SuccessDeleteAddress -> {
-            // Handle successful address deletion
-            val deletedAddress = result.result
-            // Address has been successfully deleted
-        }
-        is AddressResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
----
-
-### updateAddress
-
-Updates or creates a new address using the provided form data.
+Adds a new address to the user's address list.
 
 - Request (caller-supplied)
 
-| Field Name        | Description              | Mandatory | Data Type |
-|-------------------|--------------------------|-----------|-----------|
-| form              | Address form data        | M         | AddressForm |
+| Field Name | Description       | Mandatory | Data Type   |
+|------------|-------------------|-----------|-------------|
+| form       | Address form data | M         | AddressForm |
 
 #### AddressForm Fields
 
 | Field Name        | Description              | Mandatory | Data Type |
 |-------------------|--------------------------|-----------|-----------|
-| key               | Address key (for updates) | O       | String    |
 | name              | Full name                | O         | String    |
 | firstName         | First name               | O         | String    |
 | lastName          | Last name                | O         | String    |
@@ -174,9 +135,9 @@ Updates or creates a new address using the provided form data.
 - Usage
 
 ```kotlin
-// Create AddressForm
+// Create AddressForm for new address
 val addressForm = AddressForm(
-    key = "address-key-123", // null for new address
+    key = null, // null for new address
     name = "John Doe",
     firstName = "John",
     lastName = "Doe",
@@ -191,23 +152,60 @@ val addressForm = AddressForm(
     provinceCode = "10",
     provinceName = "Bangkok",
     zipcode = "10330",
-    isDefault = true,
-    // Other fields...
-    email = null,
-    companyName = null,
-    countryCode = "TH",
-    countryName = "Thailand",
-    village = null,
-    building = null,
-    number = "123",
-    moo = null,
-    soi = null,
-    floor = null,
-    road = "Sukhumvit Road",
-    room = null,
-    city = "Bangkok",
-    title = "Mr.",
-    personType = "individual"
+    isDefault = true
+)
+
+// Suspend
+val result = addressService.addAddress(addressForm)
+
+// Callback
+addressService.addAddress(addressForm) { result ->
+    when (result) {
+        is AddressResult.SuccessUpdateAddress -> {
+            // Handle successful address creation
+            val newAddress = result.result
+            val addressName = newAddress.addressName
+            val isDefault = newAddress.isDefault
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### updateAddress
+
+Updates an existing address using the provided form data.
+
+- Request (caller-supplied)
+
+| Field Name | Description       | Mandatory | Data Type   |
+|------------|-------------------|-----------|-------------|
+| form       | Address form data | M         | AddressForm |
+
+#### AddressForm Fields (same as addAddress)
+
+- Response (`Address`) 
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Create AddressForm for updating existing address
+val addressForm = AddressForm(
+    key = "address-key-123", // existing address key
+    name = "John Doe",
+    firstName = "John",
+    lastName = "Doe",
+    addressName = "Home Updated",
+    contactNumber = "+66812345678",
+    // ... other fields
+    isDefault = true
 )
 
 // Suspend
@@ -217,10 +215,48 @@ val result = addressService.updateAddress(addressForm)
 addressService.updateAddress(addressForm) { result ->
     when (result) {
         is AddressResult.SuccessUpdateAddress -> {
-            // Handle successful address update/creation
+            // Handle successful address update
             val updatedAddress = result.result
             val addressName = updatedAddress.addressName
             val isDefault = updatedAddress.isDefault
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### deleteAddress
+
+Deletes a specific address using its key.
+
+- Request (caller-supplied)
+
+| Field Name | Description  | Mandatory | Data Type |
+|------------|--------------|-----------|-----------|
+| key        | Address key  | M         | String    |
+
+- Response (`Address`)  
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.deleteAddress("address-key-123")
+
+// Callback
+addressService.deleteAddress("address-key-123") { result ->
+    when (result) {
+        is AddressResult.SuccessDeleteAddress -> {
+            // Handle successful address deletion
+            val deletedAddress = result.result
+            // Address has been successfully deleted
         }
         is AddressResult.Error -> {
             // Handle error
@@ -267,8 +303,8 @@ addressService.getTaxAddressList { result ->
             taxAddresses.forEach { address ->
                 val companyName = address.companyName
                 val taxId = address.taxId
-                val taxAddressName = address.taxAddressName
-                val isDefaultTax = address.isDefaultTax
+                val email = address.email
+                val isDefault = address.isDefault
             }
         }
         is AddressResult.Error -> {
@@ -292,7 +328,7 @@ Retrieves detailed information for a specific tax address using its key.
 |------------|------------------|-----------|-----------|
 | key        | Tax address key  | M         | String    |
 
-- Response (`Address`)
+- Response (`Address`)  
   HTTP status: 200
 
 - Usage
@@ -329,30 +365,31 @@ Updates or creates a new tax address using the provided form data. Tax addresses
 
 - Request (caller-supplied)
 
-| Field Name | Description          | Mandatory | Data Type |
-|------------|----------------------|-----------|-----------|
+| Field Name | Description           | Mandatory | Data Type   |
+|------------|-----------------------|-----------|-------------|
 | form       | Tax address form data | M         | AddressForm |
 
 #### Extended AddressForm Fields for Tax Addresses
 
 In addition to the standard address fields, tax addresses support these additional fields:
 
-| Field Name    | Description              | Mandatory | Data Type |
-|---------------|--------------------------|-----------|-----------|
-| email         | Email address            | O         | String    |
-| companyName   | Company/Business name    | O         | String    |
-| village       | Village name             | O         | String    |
-| building      | Building name            | O         | String    |
-| moo           | Moo (village number)     | O         | String    |
-| soi           | Soi (sub-street)         | O         | String    |
-| floor         | Floor number             | O         | String    |
-| road          | Road name                | O         | String    |
-| room          | Room number              | O         | String    |
-| city          | City name                | O         | String    |
-| title         | Title (Mr./Mrs./Ms.)     | O         | String    |
-| personType    | Person type (individual/company) | O | String    |
-| countryCode   | Country code             | O         | String    |
-| countryName   | Country name             | O         | String    |
+| Field Name  | Description                      | Mandatory | Data Type |
+|-------------|----------------------------------|-----------|-----------|
+| email       | Email address                    | O         | String    |
+| companyName | Company/Business name            | O         | String    |
+| village     | Village name                     | O         | String    |
+| building    | Building name                    | O         | String    |
+| number      | Building/house number            | O         | String    |
+| moo         | Moo (village number)             | O         | String    |
+| soi         | Soi (sub-street)                 | O         | String    |
+| floor       | Floor number                     | O         | String    |
+| road        | Road name                        | O         | String    |
+| room        | Room number                      | O         | String    |
+| city        | City name                        | O         | String    |
+| title       | Title (Mr./Mrs./Ms.)             | O         | String    |
+| personType  | Person type (individual/company) | O         | String    |
+| countryCode | Country code                     | O         | String    |
+| countryName | Country name                     | O         | String    |
 
 - Response (`Address`)  
   HTTP status: 200
@@ -405,7 +442,7 @@ addressService.updateTaxAddress(taxAddressForm) { result ->
             val updatedTaxAddress = result.result
             val companyName = updatedTaxAddress.companyName
             val taxId = updatedTaxAddress.taxId
-            val isDefaultTax = updatedTaxAddress.isDefaultTax
+            val isDefault = updatedTaxAddress.isDefault
         }
         is AddressResult.Error -> {
             // Handle error
@@ -428,7 +465,7 @@ Deletes a specific tax address using its key.
 |------------|------------------|-----------|-----------|
 | key        | Tax address key  | M         | String    |
 
-- Response (`Address`)
+- Response (`Address`)  
   HTTP status: 200
 
 - Usage
@@ -444,6 +481,226 @@ addressService.deleteTaxAddress("tax-address-key-123") { result ->
             // Handle successful tax address deletion
             val deletedTaxAddress = result.result
             // Tax address has been successfully deleted
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+## Location Information Services
+
+The AddressUseCase also provides geographic information services including provinces, districts, sub-districts, postal codes, and countries data.
+
+---
+
+### getZipCodeList
+
+Retrieves location information by postal/zip code. Returns address details associated with the provided zip code.
+
+- Request (caller-supplied)
+
+| Field Name | Description      | Mandatory | Data Type |
+|------------|------------------|-----------|-----------|
+| zipCode    | Postal/zip code  | M         | String    |
+
+- Response (`List<Zipcode>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.getZipCodeList("10330")
+
+// Callback
+addressService.getZipCodeList("10330") { result ->
+    when (result) {
+        is AddressResult.SuccessZipCodeList -> {
+            // Handle successful zip code lookup
+            val zipcodes = result.result
+            zipcodes.forEach { zipcode ->
+                val province = zipcode.province
+                val district = zipcode.district
+                val subDistrict = zipcode.subDistrict
+                val postalCode = zipcode.zipcode
+            }
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getProvinceList
+
+Retrieves a list of all available provinces. Used for address form population and validation.
+
+- Request (caller-supplied)
+
+| Field Name | Description | Mandatory | Data Type |
+|------------|-------------|-----------|-----------|
+| -          | None        | -         | -         |
+
+- Response (`List<Province>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.getProvinceList()
+
+// Callback
+addressService.getProvinceList { result ->
+    when (result) {
+        is AddressResult.SuccessProvinceList -> {
+            // Handle successful province list retrieval
+            val provinces = result.result
+            provinces.forEach { province ->
+                val provinceCode = province.provinceCode
+                val provinceName = province.provinceName
+                val provinceNameEN = province.provinceNameEN
+            }
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getDistrictList
+
+Retrieves a list of districts within a specific province.
+
+- Request (caller-supplied)
+
+| Field Name   | Description              | Mandatory | Data Type |
+|--------------|--------------------------|-----------|-----------|
+| provinceCode | Province code to filter  | M         | String    |
+
+- Response (`List<District>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.getDistrictList("10") // Bangkok province code
+
+// Callback
+addressService.getDistrictList("10") { result ->
+    when (result) {
+        is AddressResult.SuccessDistrictList -> {
+            // Handle successful district list retrieval
+            val districts = result.result
+            districts.forEach { district ->
+                val districtCode = district.districtCode
+                val districtName = district.districtName
+                val districtNameEN = district.districtNameEN
+                val provinceCode = district.provinceCode
+            }
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getSubDistrictList
+
+Retrieves a list of sub-districts within a specific district and province.
+
+- Request (caller-supplied)
+
+| Field Name   | Description              | Mandatory | Data Type |
+|--------------|--------------------------|-----------|-----------|
+| provinceCode | Province code            | M         | String    |
+| districtCode | District code to filter  | M         | String    |
+
+- Response (`List<SubDistrict>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.getSubDistrictList("10", "1001") // Bangkok, Pathumwan
+
+// Callback
+addressService.getSubDistrictList("10", "1001") { result ->
+    when (result) {
+        is AddressResult.SuccessSubDistrictList -> {
+            // Handle successful sub-district list retrieval
+            val subDistricts = result.result
+            subDistricts.forEach { subDistrict ->
+                val subDistrictCode = subDistrict.subDistrictCode
+                val subDistrictName = subDistrict.subDistrictName
+                val city = subDistrict.city
+                val zipCode = subDistrict.zipCode
+            }
+        }
+        is AddressResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getCountryList
+
+Retrieves a list of all available countries. Used for international address support.
+
+- Request (caller-supplied)
+
+| Field Name | Description | Mandatory | Data Type |
+|------------|-------------|-----------|-----------|
+| -          | None        | -         | -         |
+
+- Response (`List<Country>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = addressService.getCountryList()
+
+// Callback
+addressService.getCountryList { result ->
+    when (result) {
+        is AddressResult.SuccessCountryList -> {
+            // Handle successful countries list retrieval
+            val countries = result.result
+            countries.forEach { country ->
+                val countryId = country.countryId
+                val countryCode = country.countryCode
+                val countryName = country.countryName
+            }
         }
         is AddressResult.Error -> {
             // Handle error
@@ -512,19 +769,8 @@ The Address entity contains comprehensive location and contact information with 
 | taxName                  | Tax name                         | String?   | Tax addresses    |
 | taxNumber                | Tax number                       | String?   | Tax addresses    |
 | taxDetail                | Tax details                      | String?   | Tax addresses    |
-| taxAddressName           | Tax address name                 | String?   | Tax addresses    |
-| taxZipcode               | Tax postal code                  | String?   | Tax addresses    |
-| taxSubDistrictCode       | Tax sub-district code            | String?   | Tax addresses    |
-| taxSubDistrictName       | Tax sub-district name            | String?   | Tax addresses    |
-| taxDistrictCode          | Tax district code                | String?   | Tax addresses    |
-| taxDistrictName          | Tax district name                | String?   | Tax addresses    |
-| taxProvinceCode          | Tax province code                | String?   | Tax addresses    |
-| taxProvinceName          | Tax province name                | String?   | Tax addresses    |
-| taxSoi                   | Tax soi (sub-street)             | String?   | Tax addresses    |
 | **Status Fields**        |                                  |           |                  |
 | isDefault                | Default shipping address flag    | Boolean?  | Shipping addresses |
-| isDefaultTax             | Default tax address flag         | Boolean?  | Tax addresses    |
-| isTax                    | Tax address indicator            | Boolean?  | All addresses    |
 | active                   | Active status                    | Boolean?  | All addresses    |
 | personType               | Person type (individual/company) | String?   | Tax addresses    |
 | type                     | Address type                     | String?   | All addresses    |
@@ -533,49 +779,11 @@ The Address entity contains comprehensive location and contact information with 
 | modifyDate               | Last modification timestamp      | Long?     | All addresses    |
 | timestamp                | Timestamp                        | Int?      | All addresses    |
 | eTag                     | Entity tag for caching           | String?   | All addresses    |
-| **Additional Fields**    |                                  |           |                  |
-| idCard                   | ID card number                   | String?   | All addresses    |
-| greaterArea              | Greater area name                | String?   | All addresses    |
-| landmark                 | Nearby landmark                  | String?   | All addresses    |
-| blockNumber              | Block number                     | String?   | All addresses    |
-| remark                   | Additional remarks               | String?   | All addresses    |
-| extra                    | Extra information                | String?   | All addresses    |
-| customInfo1              | Custom information field 1       | String?   | All addresses    |
-| customInfo2              | Custom information field 2       | String?   | All addresses    |
-| customInfo3              | Custom information field 3       | String?   | All addresses    |
-| customInfo4              | Custom information field 4       | String?   | All addresses    |
-| customInfo5              | Custom information field 5       | String?   | All addresses    |
-
----
-
-## Best Practices
-
-### Address Management
-- Always validate required fields before calling update methods
-- Use meaningful `addressName` values for better user experience
-- Set appropriate default addresses for shipping and tax purposes
-- Handle network errors gracefully in your UI
-
-### Tax Address Considerations
-- Tax addresses require more detailed information for legal compliance
-- Always include `companyName` and `taxId` for business addresses
-- Use appropriate `personType` values ("individual" or "company")
-- Consider local tax regulations when collecting address information
-
-### Error Handling
-- Always check for `AddressResult.Error` in callbacks
-- Implement retry logic for network failures
-- Provide user-friendly error messages
-- Validate form data before submission
-
-### Performance Tips
-- Cache address lists locally when appropriate
-- Use suspend functions for better coroutine integration
-- Consider pagination for large address lists
-- Minimize API calls by batching operations when possible
 
 ---
 
 ## Summary
 
-The AddressUseCase provides comprehensive address management functionality for both regular shipping addresses and specialized tax addresses. It supports full CRUD operations with both suspend and callback patterns, making it suitable for various architectural approaches. The rich Address entity provides extensive geographic and contact information to support diverse business requirements across different regions and tax jurisdictions.
+The AddressUseCase provides comprehensive address management functionality for both regular shipping addresses and specialized tax addresses, along with complete location information services. It supports full CRUD operations with both suspend and callback patterns, making it suitable for various architectural approaches. The rich Address entity provides extensive geographic and contact information to support diverse business requirements across different regions and tax jurisdictions.
+
+The UseCase combines three main functional areas: personal address management, tax address management, and location information services (provinces, districts, sub-districts, zip codes, and countries), making it a complete solution for address-related operations in applications requiring Thai geographic data support.

@@ -12,9 +12,7 @@ This guide provides comprehensive documentation for using the BuzzebeesSDK URL b
 4. [Access Token Management](#access-token-management)
 5. [Shopping Cart Extensions](#shopping-cart-extensions)
 6. [Usage Examples](#usage-examples)
-7. [Integration Patterns](#integration-patterns)
-8. [Best Practices](#best-practices)
-9. [Troubleshooting](#troubleshooting)
+7. [Best Practices](#best-practices)
 
 ---
 
@@ -24,19 +22,28 @@ The URL Builder Extensions provide convenient methods for:
 
 - **Profile Image URLs**: Generate complete URLs for user profile images
 - **Campaign Image URLs**: Build full image URLs for campaigns with proper base URL handling
-- **Generic URL Building**: 🆕 Flexible URL building with template replacement and parameter handling
+- **Generic URL Building**: Flexible URL building with template replacement and parameter handling
 - **Redeem URLs**: Generate complete redemption URLs with template replacements and parameters  
-- **Access Token Management**: 🆕 Generic access token generation for any purpose
+- **Access Token Management**: Generic access token generation for any purpose
 - **Shopping Cart URLs**: Build shopping cart URLs with access token management and parameter handling
+
+### Security Architecture
+
+The URL building system uses a secure architecture pattern:
+- **Interface-Based**: All functionality exposed through `IUrlHandler` interface
+- **Implementation Hidden**: Business logic secured in `UrlHandlerImpl` (obfuscated)
+- **Extension Pattern**: Clean SDK integration via extension functions
+- **Configuration Secured**: All sensitive configs handled internally
 
 ### Benefits
 
 ✅ **Automatic Configuration**: Uses SDK's configured base URLs and authentication  
-✅ **Template Processing**: 🆕 Flexible template replacement with configurable patterns  
+✅ **Template Processing**: Flexible template replacement with configurable patterns  
 ✅ **Parameter Management**: Enhanced query parameter and URL option handling  
 ✅ **Type Safety**: Strongly typed parameters with proper validation  
-✅ **Generic Access Tokens**: 🆕 Reusable access token system for multiple services  
+✅ **Generic Access Tokens**: Reusable access token system for multiple services  
 ✅ **Easy Integration**: Simple extension functions on the main SDK instance  
+✅ **Secure by Design**: Business logic hidden from clients through interface pattern
 
 ---
 
@@ -115,7 +122,7 @@ val redeemUrl = BuzzebeesSDK.instance().buildRedeemUrl(
 
 ## Generic URL Building
 
-### 🆕 Build Generic URL with Template Replacement
+### Build Generic URL with Template Replacement
 
 **Function**: `buildGenericUrl(baseUrl: String, urlOptions: UrlBuildOptions = UrlBuildOptions(), templateConfig: TemplateReplacementConfig = TemplateReplacementConfig(), userId: String? = null, campaignId: String? = null): String`
 
@@ -143,20 +150,18 @@ data class TemplateReplacementConfig(
 
 ```kotlin
 // Basic URL enhancement
-var url = "https://example.com/{token}/campaign?id={campaignId}"
+val url = "https://example.com/{token}/campaign?id={campaignId}"
 val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
     baseUrl = url,
     userId = "user123",
     campaignId = "campaign456"
 )
-// Result: "https://example.com/shuffled_token_here/campaign?id=campaign456&token=shuffled_token_here&return_url=myapp&appName=MyApp&theme=MyApp&nativeheader=false&header=true"
 
 // Advanced configuration
-var url = bannerComponentItemModel.url.value()
 val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = url,
+    baseUrl = bannerUrl,
     urlOptions = UrlBuildOptions(
-        shouldShuffleToken = false, // Use original token
+        shouldShuffleToken = false,
         nativeHeader = false,
         header = true,
         additionalParams = mapOf(
@@ -173,35 +178,15 @@ val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
         )
     )
 )
-
-// Replace both {token} and <token> patterns
-var url = "https://api.com/service?auth={token}&backup=<token>&user={userId}"
-val processedUrl = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = url,
-    userId = "user123"
-)
 ```
-
-**Template Replacement Features**:
-- **Token Patterns**: `{token}`, `<token>` - Replaced with authentication token
-- **User ID Patterns**: `{userId}`, `<userId>`, `{user_id}`, `<user_id>`
-- **Campaign ID Patterns**: `{campaignId}`, `<campaignId>`, `{CampaignId}`, `{campaign_id}`
-- **Device Info**: `<uid>`, `<imei>`, `<deviceId>`, `<model>`, `{model}`, `<device_locale>`, `{device_locale}`
-- **Custom Replacements**: Any custom pattern you define
-
-**URL Options**:
-- **shouldShuffleToken**: Control token shuffling behavior
-- **nativeHeader**: Native header visibility
-- **header**: Standard header visibility  
-- **additionalParams**: Custom URL parameters
 
 ---
 
 ## Access Token Management
 
-### 🆕 Generic Access Token System
+### Generic Access Token System
 
-The SDK now provides a generic access token system that can be used for shopping carts and other services.
+The SDK provides a generic access token system that can be used for shopping carts and other services.
 
 #### Access Token Results
 
@@ -226,7 +211,6 @@ suspend fun getAccessToken() {
         is AccessTokenResult.Success -> {
             val accessToken = result.accessToken
             // Use token for any service
-            useTokenForCustomService(accessToken)
         }
         is AccessTokenResult.Error -> {
             // Handle error
@@ -260,22 +244,31 @@ val customRequest = BuzzebeesSDK.instance().generateCustomAccessTokenRequest(
 )
 ```
 
+#### Validation
+
+**Function**: `validateAccessTokenRequest(request: AccessTokenRequest): Boolean`
+
+Validate access token request before use.
+
+```kotlin
+val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
+if (BuzzebeesSDK.instance().validateAccessTokenRequest(request)) {
+    // Request is valid, proceed
+    val result = BuzzebeesSDK.instance().requestAccessToken(request)
+}
+```
+
 ---
 
 ## Shopping Cart Extensions
 
 ### Shopping Cart URL Building
 
-The shopping cart system now uses the generic access token system and supports enhanced URL options.
+The shopping cart system uses the generic access token system and supports enhanced URL options.
 
 #### Data Classes
 
 ```kotlin
-data class ShoppingCartUrlResult(
-    val url: String,
-    val accessToken: String
-)
-
 sealed class ShoppingCartUrlBuildResult {
     data class Success(val result: ShoppingCartUrlResult) : ShoppingCartUrlBuildResult()
     data class Error(val message: String, val throwable: Throwable? = null) : ShoppingCartUrlBuildResult()
@@ -307,8 +300,6 @@ class ShoppingCartManager {
         
         return when (result) {
             is ShoppingCartUrlBuildResult.Success -> {
-                // Save token for future use
-                saveAccessToken(result.result.accessToken)
                 result.result.url
             }
             is ShoppingCartUrlBuildResult.Error -> {
@@ -345,15 +336,6 @@ class ShoppingCartManager {
             accessToken = accessToken,
             path = "/myorder",
             additionalParams = mapOf("sortBy" to "date")
-        )
-    }
-    
-    fun navigateToVouchers(accessToken: String, category: String? = null): String {
-        val params = category?.let { mapOf("category" to it) } ?: emptyMap()
-        return BuzzebeesSDK.instance().buildFlexibleCartUrl(
-            accessToken = accessToken,
-            path = "/voucher",
-            additionalParams = params
         )
     }
 }
@@ -397,14 +379,12 @@ class CampaignDetailActivity : AppCompatActivity() {
                 shouldShuffleToken = true,
                 additionalParams = mapOf(
                     "appName" to BuildConfig.APP_NAME,
-                    "version" to BuildConfig.VERSION_NAME,
-                    "platform" to "android"
+                    "version" to BuildConfig.VERSION_NAME
                 )
             ),
             templateConfig = TemplateReplacementConfig(
                 customReplacements = mapOf(
-                    "{locale}" to Locale.getDefault().language,
-                    "{theme}" to getAppTheme()
+                    "{locale}" to Locale.getDefault().language
                 )
             ),
             userId = userId,
@@ -416,56 +396,10 @@ class CampaignDetailActivity : AppCompatActivity() {
 }
 ```
 
-### Advanced Redeem URL Building
-
-```kotlin
-class RedeemActivity : AppCompatActivity() {
-    
-    private fun buildAdvancedRedeemUrl(campaign: Campaign): String {
-        val redeemOptions = RedeemOptions(
-            color = colorSpinner.selectedItem?.toString(),
-            size = sizeSpinner.selectedItem?.toString(),
-            quantity = quantityPicker.value.toString(),
-            walletCard = getSelectedWalletCard()
-        )
-        
-        val urlOptions = UrlBuildOptions(
-            shouldShuffleToken = preferences.getBoolean("use_shuffled_token", true),
-            nativeHeader = false,
-            header = !preferences.getBoolean("hide_header", false),
-            additionalParams = mapOf(
-                "source" to "mobile_app",
-                "version" to BuildConfig.VERSION_NAME,
-                "isAllianzMember" to if (isAllianzMember()) "Y" else "N",
-                "deviceType" to "smartphone"
-            )
-        )
-        
-        val templateConfig = TemplateReplacementConfig(
-            tokenPatterns = listOf("{token}", "<token>", "{auth_token}"),
-            customReplacements = mapOf(
-                "{promo_code}" to getCurrentPromoCode(),
-                "{referral_id}" to getReferralId(),
-                "{session_id}" to getSessionId()
-            )
-        )
-        
-        return BuzzebeesSDK.instance().buildRedeemUrl(
-            campaign = campaign,
-            userId = getCurrentUserId(),
-            options = redeemOptions,
-            urlOptions = urlOptions,
-            templateConfig = templateConfig
-        )
-    }
-}
-```
-
 ### Shopping Cart with Token Management
 
 ```kotlin
 class ShoppingViewModel : ViewModel() {
-    private var accessToken: String? = null
     
     suspend fun initializeShoppingCart(): Boolean {
         return try {
@@ -473,7 +407,6 @@ class ShoppingViewModel : ViewModel() {
             
             when (result) {
                 is ShoppingCartUrlBuildResult.Success -> {
-                    accessToken = result.result.accessToken
                     _cartUrl.value = result.result.url
                     true
                 }
@@ -488,137 +421,20 @@ class ShoppingViewModel : ViewModel() {
         }
     }
     
-    fun navigateToSection(section: String) {
-        val token = accessToken ?: return
-        
+    fun navigateToSection(accessToken: String, section: String) {
         val url = when (section) {
             "myorders" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                accessToken = token,
-                path = "/myorder",
-                additionalParams = mapOf("tab" to "active")
+                accessToken = accessToken,
+                path = "/myorder"
             )
             "vouchers" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                accessToken = token,
+                accessToken = accessToken,
                 path = "/voucher"
             )
-            "settings" -> BuzzebeesSDK.instance().buildFlexibleCartUrl(
-                accessToken = token,
-                path = "/settings"
-            )
-            else -> BuzzebeesSDK.instance().buildFlexibleCartUrl(token)
+            else -> BuzzebeesSDK.instance().buildFlexibleCartUrl(accessToken)
         }
         
         _navigationUrl.value = url
-    }
-}
-```
-
----
-
-## Integration Patterns
-
-### Pattern 1: URL Builder Service
-
-```kotlin
-class UrlBuilderService {
-    private val sdk = BuzzebeesSDK.instance()
-    
-    // Generic URL enhancement
-    fun enhanceUrl(
-        baseUrl: String,
-        userId: String? = null,
-        campaignId: String? = null,
-        additionalParams: Map<String, String> = emptyMap(),
-        customReplacements: Map<String, String> = emptyMap()
-    ): String {
-        return sdk.buildGenericUrl(
-            baseUrl = baseUrl,
-            urlOptions = UrlBuildOptions(
-                additionalParams = additionalParams
-            ),
-            templateConfig = TemplateReplacementConfig(
-                customReplacements = customReplacements
-            ),
-            userId = userId,
-            campaignId = campaignId
-        )
-    }
-    
-    // Specialized redeem URL
-    fun buildRedeemUrl(
-        campaign: Campaign,
-        userId: String,
-        options: Map<String, String> = emptyMap()
-    ): String {
-        val redeemOptions = RedeemOptions(
-            color = options["color"],
-            size = options["size"],
-            quantity = options["quantity"],
-            walletCard = options["wallet_card"]
-        )
-        
-        return sdk.buildRedeemUrl(
-            campaign = campaign,
-            userId = userId,
-            options = redeemOptions
-        )
-    }
-    
-    // Access token management
-    suspend fun getAccessToken(): String? {
-        val request = sdk.generateAccessTokenRequest()
-        return when (val result = sdk.requestAccessToken(request)) {
-            is AccessTokenResult.Success -> result.accessToken
-            is AccessTokenResult.Error -> null
-        }
-    }
-}
-```
-
-### Pattern 2: Repository Pattern with Enhanced URLs
-
-```kotlin
-interface CampaignRepository {
-    suspend fun getCampaignUrls(campaignId: String, userId: String): CampaignUrls
-    suspend fun buildCustomUrl(baseUrl: String, options: UrlOptions): String
-}
-
-data class CampaignUrls(
-    val imageUrl: String,
-    val redeemUrl: String,
-    val websiteUrl: String
-)
-
-data class UrlOptions(
-    val additionalParams: Map<String, String> = emptyMap(),
-    val customReplacements: Map<String, String> = emptyMap(),
-    val shouldShuffleToken: Boolean = true
-)
-
-class CampaignRepositoryImpl : CampaignRepository {
-    private val sdk = BuzzebeesSDK.instance()
-    
-    override suspend fun getCampaignUrls(campaignId: String, userId: String): CampaignUrls {
-        val campaign = getCampaign(campaignId)
-        
-        return CampaignUrls(
-            imageUrl = sdk.buildFullImageUrl(campaign.imageUrl, campaign.id),
-            redeemUrl = sdk.buildRedeemUrl(campaign, userId),
-            websiteUrl = campaign.websiteUrl // Or use buildGenericUrl for enhancement
-        )
-    }
-    
-    override suspend fun buildCustomUrl(baseUrl: String, options: UrlOptions): String {
-        return sdk.buildGenericUrl(
-            baseUrl = baseUrl,
-            urlOptions = UrlBuildOptions(
-                shouldShuffleToken = options.shouldShuffleToken,
-                additionalParams = options.additionalParams
-            ),
-            templateConfig = TemplateReplacementConfig(
-                customReplacements = options.customReplacements
-            )
-        )
     }
 }
 ```
@@ -630,13 +446,6 @@ class CampaignRepositoryImpl : CampaignRepository {
 ### 1. Use Generic URL Builder for Flexibility
 
 ```kotlin
-// Instead of manual URL construction
-var url = baseUrl
-url = url.replace("{token}", getToken())
-url = url.replace("{userId}", userId)
-url += "&appName=" + getAppName()
-url += "&theme=" + getTheme()
-
 // Use generic URL builder
 val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
     baseUrl = baseUrl,
@@ -650,69 +459,24 @@ val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
 )
 ```
 
-### 2. Cache Access Tokens
+### 2. Validate Requests Before Use
 
 ```kotlin
-class TokenManager {
-    private var cachedToken: String? = null
-    private var tokenExpiry: Long = 0
-    
-    suspend fun getValidToken(): String? {
-        if (isTokenValid()) {
-            return cachedToken
-        }
-        
-        return when (val result = BuzzebeesSDK.instance().requestAccessToken(generateRequest())) {
-            is AccessTokenResult.Success -> {
-                cachedToken = result.accessToken
-                tokenExpiry = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(2)
-                result.accessToken
-            }
-            is AccessTokenResult.Error -> null
-        }
-    }
-    
-    private fun isTokenValid(): Boolean {
-        return cachedToken != null && System.currentTimeMillis() < tokenExpiry
-    }
+val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
+if (BuzzebeesSDK.instance().validateAccessTokenRequest(request)) {
+    val result = BuzzebeesSDK.instance().requestAccessToken(request)
+    // Use result
 }
 ```
 
-### 3. Configure Template Replacements Globally
+### 3. Check Availability Before Use
 
 ```kotlin
-object UrlConfig {
-    fun getStandardTemplateConfig(): TemplateReplacementConfig {
-        return TemplateReplacementConfig(
-            tokenPatterns = listOf("{token}", "<token>", "{auth_token}"),
-            customReplacements = mapOf(
-                "{app_version}" to BuildConfig.VERSION_NAME,
-                "{platform}" to "android",
-                "{locale}" to Locale.getDefault().language
-            )
-        )
-    }
-    
-    fun getStandardUrlOptions(): UrlBuildOptions {
-        return UrlBuildOptions(
-            shouldShuffleToken = true,
-            nativeHeader = false,
-            header = true,
-            additionalParams = mapOf(
-                "source" to "mobile_app",
-                "platform" to "android"
-            )
-        )
-    }
+if (BuzzebeesSDK.instance().isShoppingCartAvailable()) {
+    // Proceed with cart functionality
+} else {
+    // Handle missing configuration
 }
-
-// Usage
-val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = baseUrl,
-    urlOptions = UrlConfig.getStandardUrlOptions(),
-    templateConfig = UrlConfig.getStandardTemplateConfig(),
-    userId = userId
-)
 ```
 
 ### 4. Error Handling
@@ -729,172 +493,32 @@ suspend fun buildUrlSafely(baseUrl: String, userId: String?): String? {
         null
     }
 }
-
-suspend fun getAccessTokenSafely(): String? {
-    return try {
-        val request = BuzzebeesSDK.instance().generateAccessTokenRequest()
-        when (val result = BuzzebeesSDK.instance().requestAccessToken(request)) {
-            is AccessTokenResult.Success -> result.accessToken
-            is AccessTokenResult.Error -> {
-                Log.e("Token", "Failed to get access token: ${result.message}")
-                null
-            }
-        }
-    } catch (e: Exception) {
-        Log.e("Token", "Exception getting access token", e)
-        null
-    }
-}
 ```
 
 ---
 
-## Troubleshooting
+## Summary
 
-### Common Issues and Solutions
+The URL Builder Extensions provide secure and flexible URL generation for all Buzzebees services through a clean interface-based architecture. The system offers:
 
-#### 1. Template Replacement Not Working
+**Core Features:**
+- **Profile & Campaign URLs**: Complete image URL generation
+- **Generic URL Building**: Flexible template replacement system  
+- **Access Token Management**: Reusable token system for multiple services
+- **Shopping Cart Integration**: Complete cart URL building with token management
+- **Template Processing**: Configurable patterns and custom replacements
 
-**Problem**: Custom patterns like `{custom_param}` not being replaced
+**Security Benefits:**
+- **Interface-Based Design**: Business logic hidden through `IUrlHandler` interface
+- **Implementation Security**: All sensitive logic in obfuscated `UrlHandlerImpl`
+- **Configuration Protection**: SDK configs handled internally
+- **Type Safety**: Strongly typed parameters with validation
 
-**Solution**:
-```kotlin
-val templateConfig = TemplateReplacementConfig(
-    customReplacements = mapOf(
-        "{custom_param}" to "custom_value",
-        "<custom_param>" to "custom_value" // Support both patterns
-    )
-)
-
-val url = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = baseUrl,
-    templateConfig = templateConfig
-)
-```
-
-#### 2. Access Token Request Fails
-
-**Problem**: `requestAccessToken` returns error
-
-**Solution**:
-```kotlin
-// Check SDK configuration
-if (!BuzzebeesSDK.instance().isShoppingCartAvailable()) {
-    // Missing configuration
-    Log.e("Token", "Shopping cart configuration missing")
-}
-
-// Verify network connectivity
-// Check appId and appName in SDK configuration
-val configs = BuzzebeesSDK.instance().servicesConfigs()
-Log.d("Token", "App ID: ${configs.appId}, App Name: ${configs.appName}")
-```
-
-#### 3. Token Shuffling Issues
-
-**Problem**: Token shuffling not working as expected
-
-**Solution**:
-```kotlin
-// Disable token shuffling if needed
-val urlOptions = UrlBuildOptions(
-    shouldShuffleToken = false // Use original token
-)
-
-// Or debug token shuffling
-val originalToken = BuzzebeesSDK.instance().authProvider().getAuthToken()
-Log.d("Token", "Original token: $originalToken")
-
-val enhancedUrl = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = baseUrl,
-    urlOptions = urlOptions
-)
-```
-
-#### 4. Shopping Cart URLs Not Working
-
-**Problem**: Cart URLs return 404 or access denied
-
-**Solution**:
-```kotlin
-// Verify base cart URL configuration
-val configs = BuzzebeesSDK.instance().servicesConfigs()
-Log.d("Cart", "Web shopping URL: ${configs.webShoppingUrl}")
-
-// Check access token validity
-suspend fun validateToken(token: String): Boolean {
-    // Try to use token in a simple cart API call
-    // Return true if successful, false otherwise
-}
-
-// Use fresh token
-val result = BuzzebeesSDK.instance().buildDefaultShoppingCartUrl()
-when (result) {
-    is ShoppingCartUrlBuildResult.Success -> {
-        if (validateToken(result.result.accessToken)) {
-            // Token is valid
-        }
-    }
-    is ShoppingCartUrlBuildResult.Error -> {
-        // Handle error
-    }
-}
-```
-
----
-
-## Summary of Changes
-
-### 🆕 New Features
-
-1. **Generic URL Builder**: `buildGenericUrl()` for flexible URL enhancement
-2. **Template Replacement Config**: Configurable patterns and custom replacements
-3. **URL Build Options**: Enhanced parameter handling and token control
-4. **Generic Access Token System**: Reusable access token management
-5. **Enhanced Shopping Cart**: Better URL options and error handling
-
-### ✅ Improved Features
-
-1. **Flexible Template Patterns**: Support for both `{pattern}` and `<pattern>` styles
-2. **Enhanced Parameter Management**: More control over URL parameters
-3. **Better Error Handling**: Comprehensive error types and messages
-4. **Token Control**: Choose between shuffled and original tokens
-5. **Backward Compatibility**: All existing functionality preserved
-
-### 🔧 Migration Guide
-
-**Old Code**:
-```kotlin
-// Manual URL building
-var url = baseUrl.replace("{token}", token)
-url += "&appName=" + appName
-```
-
-**New Code**:
-```kotlin
-// Generic URL builder
-val url = BuzzebeesSDK.instance().buildGenericUrl(
-    baseUrl = baseUrl,
-    urlOptions = UrlBuildOptions(
-        additionalParams = mapOf("appName" to appName)
-    )
-)
-```
-
-The new URL building system provides maximum flexibility while maintaining backward compatibility with existing code.
-
----
-
-## Conclusion
-
-The enhanced URL Builder Extensions provide powerful and flexible URL generation for all Buzzebees services. The new generic URL builder and access token management system offer unprecedented flexibility while maintaining ease of use.
-
-Key advantages:
-- **🆕 Generic URL Building**: Handle any URL with template replacement
-- **🆕 Flexible Access Tokens**: Reusable token system for multiple services
-- **Enhanced Template Processing**: Configurable patterns and replacements
-- **Better Parameter Management**: More control over URL parameters
-- **Improved Error Handling**: Comprehensive error reporting
+**Key Advantages:**
+- **Easy Integration**: Simple extension functions on SDK instance
+- **Automatic Configuration**: Uses SDK's configured URLs and authentication
+- **Enhanced Error Handling**: Comprehensive error types and validation
 - **Backward Compatibility**: All existing functionality preserved
+- **Flexible Parameters**: Enhanced control over URL generation
 
-For additional implementation details, refer to the `BuzzebeesSDK_UrlExtension.kt` source file.
+For implementation details, all business logic is secured within the `UrlHandlerImpl` class and accessed through the `IUrlHandler` interface for maximum security and obfuscation.

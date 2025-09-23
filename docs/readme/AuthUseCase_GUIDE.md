@@ -36,7 +36,7 @@ val auth = BuzzebeesSDK.instance().auth
 | locale                          | Language code (e.g., 1054/1033) | O         | Int                  |
 | userLevel                       | User level                      | O         | Int                  |
 | userLevelDetail                 | Level detail                    | O         | String               |
-| userFlags                       | User flags                      | O         | `Array<String>`        |
+| userFlags                       | User flags                      | O         | Array<`String`>        |
 | sponsorId                       | Sponsor id                      | O         | Int                  |
 | canRedeem                       | Redeem eligibility              | O         | Boolean              |
 | uuid                            | Device/user uuid                | O         | String               |
@@ -46,7 +46,7 @@ val auth = BuzzebeesSDK.instance().auth
 | detail.ewalletToken             | E-Wallet token                  | O         | String               |
 | cartCount                       | Cart items count                | O         | Int                  |
 | platform                        | Platform name                   | O         | String               |
-| topics                          | Topics subscribed               | O         | `Array<String>`       |
+| topics                          | Topics subscribed               | O         | Array<`String`>        |
 | channel                         | Channel (device/facebook/web)   | O         | String               |
 | TermAndCondition                | Terms & Conditions consent      | O         | Int                  |
 | DataPrivacy                     | Data Privacy consent            | O         | Int                  |

@@ -13,6 +13,44 @@ val dashboardService = BuzzebeesSDK.instance().dashBoardUseCase
 
 ---
 
+### getCachedMainDashboard
+
+Retrieves cached main dashboard from local storage without making network requests.
+
+- Request (caller-supplied)
+
+No parameters required.
+
+- Response (`DashBoardResult.SuccessMain`)
+  Returns cached main dashboard or empty list
+
+- Usage
+
+```kotlin
+// Synchronous call - no network request
+val result = dashboardService.getCachedMainDashboard()
+
+when (result) {
+    is DashBoardResult.SuccessMain -> {
+        val cachedDashboard = result.result
+        if (cachedDashboard.isNotEmpty()) {
+            // Use cached data
+            cachedDashboard.forEach { item ->
+                println("Cached Item: ${item.name}")
+            }
+        } else {
+            // No cached data available - consider calling getMainDashboard()
+            println("No cached main dashboard available")
+        }
+    }
+    is DashBoardResult.Error -> {
+        // Handle error (unlikely for cache operation)
+    }
+}
+```
+
+---
+
 ### getMainDashboard
 
 Retrieves the main application dashboard with localized content and dashboard items.
@@ -146,16 +184,56 @@ dashboardService.getMainDashboard(
 
 ---
 
+### getCachedSubDashboard
+
+Retrieves cached sub-dashboard from local storage without making network requests.
+
+- Request (caller-supplied)
+
+| Field Name | Description                     | Mandatory | Data Type |
+|------------|---------------------------------|-----------|-----------|
+| appName    | Application name for cache key  | M         | String    |
+
+- Response (`DashBoardResult.SuccessSub`)
+  Returns cached sub-dashboard or empty list
+
+- Usage
+
+```kotlin
+// Synchronous call - no network request
+val result = dashboardService.getCachedSubDashboard(appName = "MyApp")
+
+when (result) {
+    is DashBoardResult.SuccessSub -> {
+        val cachedSubDashboard = result.result
+        if (cachedSubDashboard.isNotEmpty()) {
+            // Use cached data
+            cachedSubDashboard.forEach { item ->
+                println("Cached Sub-item: ${item.name}")
+            }
+        } else {
+            // No cached data available - consider calling getSubDashboard()
+            println("No cached sub-dashboard available for $appName")
+        }
+    }
+    is DashBoardResult.Error -> {
+        // Handle error (unlikely for cache operation)
+    }
+}
+```
+
+---
+
 ### getSubDashboard
 
 Retrieves a specific sub-dashboard by dashboard name with localized content.
 
 - Request (caller-supplied)
 
-| Field Name    | Description                           | Mandatory | Data Type |
-|---------------|---------------------------------------|-----------|-----------|
-| dashboardName | Dashboard name from Backoffice        | M         | String    |
-| locale        | User language (1054: Thai, 1033: Eng) | M         | Int       |
+| Field Name | Description                           | Mandatory | Data Type |
+|------------|---------------------------------------|-----------|-----------|
+| appName    | Application name from Backoffice      | M         | String    |
+| locale     | User language (1054: Thai, 1033: Eng) | M         | Int       |
 
 - Response (`List<Dashboard>`)
   HTTP status: 200
@@ -203,13 +281,13 @@ Retrieves a specific sub-dashboard by dashboard name with localized content.
 ```kotlin
 // Suspend
 val result = dashboardService.getSubDashboard(
-    dashboardName = "promotions",
+    appName = "promotions",
     locale = 1054
 )
 
 // Callback
 dashboardService.getSubDashboard(
-    dashboardName = "rewards_dashboard",
+    appName = "rewards_dashboard",
     locale = 1033
 ) { result ->
     when (result) {

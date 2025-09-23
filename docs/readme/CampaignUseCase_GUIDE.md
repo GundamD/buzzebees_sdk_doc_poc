@@ -13,6 +13,53 @@ val campaignService = BuzzebeesSDK.instance().campaignUseCase
 
 ---
 
+### getCachedList
+
+Retrieves cached campaign list for a specific category without making a network request. This method provides fast access to previously loaded campaigns.
+
+- Request (caller-supplied)
+
+| Field Name | Description        | Mandatory | Data Type |
+|------------|--------------------|-----------|-----------|
+| category   | Category filter    | O         | String?   |
+
+- Response (`List<Campaign>`)
+  HTTP status: 200
+
+> **Campaign Fields Reference**
+>
+> Same as getCampaignList response - see the complete Campaign entity fields table below.
+
+- Usage
+
+```kotlin
+// Suspend
+val result = campaignService.getCachedList("food")
+
+// Callback
+campaignService.getCachedList("electronics") { result ->
+    when (result) {
+        is CampaignResult.SuccessCampaignList -> {
+            // Handle successful cached list retrieval
+            val cachedCampaigns = result.result
+            cachedCampaigns.forEach { campaign ->
+                val name = campaign.name
+                val points = campaign.pointPerUnit
+                println("Cached Campaign: $name - Points: $points")
+            }
+        }
+        is CampaignResult.Error -> {
+            // Handle error (rarely occurs with cached data)
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+**Note**: This method returns cached data only. If no cached data exists for the specified category, it returns an empty list. Use `getCampaignList` to fetch fresh data from the server.
+
+---
+
 ### getCampaignList
 
 Retrieves a list of campaigns based on various filtering criteria and configuration parameters.
@@ -251,6 +298,7 @@ Retrieves detailed information for a specific campaign.
 | subCampaigns            | List of sub-campaigns            | `List<SubCampaign>?` | SubCampaigns            |
 | related                 | Related campaigns                | `List<Campaign>?`    | Related                 |
 | isFavourite             | User marked as favorite          | Boolean?           | IsFavourite             |
+| readyToUse              | Campaign readiness status        | ReadyToUse         | ReadyToUse              |
 
 ### Picture Entity Fields
 
@@ -309,6 +357,27 @@ Retrieves detailed information for a specific campaign.
 | partialPoints | Partial points info   | Any?      | partialPoints |
 | nameEn        | Sub-item name English | String?   | name_en       |
 
+### ReadyToUse Entity Fields
+
+| Field Name    | Description                           | Data Type | JSON Field    |
+|---------------|---------------------------------------|-----------|--------------|
+| isReadyToUse  | Campaign is ready for redemption      | Boolean?  | isReadyToUse  |
+| message       | Status message (reason if not ready)  | String?   | message       |
+| code          | Status code identifier                | String?   | code          |
+
+**Important**: The `readyToUse` field is automatically calculated by the SDK when calling `getCampaignDetail`. It evaluates various conditions including user authentication status, campaign expiration, available quantity, and user eligibility to determine if the campaign is ready for redemption.
+
+**Common Status Codes**:
+- `"1"` - Campaign sold out
+- `"2"` - Max redemption per person reached
+- `"3"` - Campaign in cool down period
+- `"1403"` - Condition invalid
+- `"1406"` - Sponsor only campaign
+- `"1409"` - Campaign expired
+- `"1410"` - Campaign not started yet
+- `"1416"` - App version expired
+- `"1427"` - Privilege cannot be redeemed under specified terms
+
 - Usage
 
 ```kotlin
@@ -330,6 +399,29 @@ campaignService.getCampaignDetail("12345", 1054) { result ->
             val terms = campaignDetail.condition
             val images = campaignDetail.pictures
             val styles = campaignDetail.subCampaignStyles
+            
+            // Check campaign readiness status
+            val readyStatus = campaignDetail.readyToUse
+            val isReady = readyStatus.isReadyToUse
+            val statusMessage = readyStatus.message
+            val statusCode = readyStatus.code
+            
+            if (isReady == true) {
+                // Campaign is ready for redemption
+                showRedeemButton(true)
+            } else {
+                // Campaign is not ready - show reason
+                showStatusMessage(statusMessage)
+                showRedeemButton(false)
+                
+                // Handle specific status codes
+                when (statusCode) {
+                    "1" -> showSoldOutStatus()
+                    "1409" -> showExpiredStatus()
+                    "1410" -> showNotStartedStatus()
+                    else -> showGenericUnavailableStatus()
+                }
+            }
         }
         is CampaignResult.Error -> {
             // Handle error

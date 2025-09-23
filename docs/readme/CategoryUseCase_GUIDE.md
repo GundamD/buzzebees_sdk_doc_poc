@@ -104,6 +104,135 @@ categoryService.getCategory(
 
 ---
 
+### getCachedCategory
+
+Retrieves cached categories from local storage without making network requests.
+
+- Request (caller-supplied)
+
+| Field Name | Description                                | Mandatory | Data Type |
+|------------|---------------------------------------------|-----------|-----------||
+| config     | Configuration identifier for cached data   | M         | String    |
+
+- Response (`CategoryResult.SuccessCategoryList`)
+  Returns cached categories or empty list
+
+- Usage
+
+```kotlin
+// Synchronous call - no network request
+val result = categoryService.getCachedCategory(config = "main_categories")
+
+when (result) {
+    is CategoryResult.SuccessCategoryList -> {
+        val cachedCategories = result.result
+        if (cachedCategories.isNotEmpty()) {
+            // Use cached data
+        } else {
+            // No cached data available
+        }
+    }
+    is CategoryResult.Error -> {
+        // Handle error
+    }
+}
+```
+
+---
+
+### getCategoryMenuCampaigns
+
+Retrieves categories with associated menu campaigns for display in navigation menus.
+
+- Request (caller-supplied)
+
+| Field Name | Description                               | Mandatory | Data Type |
+|------------|-------------------------------------------|-----------|-----------||
+| id         | Specific category ID to filter by        | O         | String?   |
+| skip       | Number of records to skip for pagination | O         | Int?      |
+| top        | Maximum number of records to return      | O         | Int?      |
+| locale     | Locale identifier for content localization | O         | Int?      |
+
+- Response (`CategoryResult.SuccessMenuCampaignsRaw`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = categoryService.getCategoryMenuCampaigns(
+    id = "cat_123",
+    skip = 0,
+    top = 10,
+    locale = 1033
+)
+
+// Callback
+categoryService.getCategoryMenuCampaigns(
+    id = null,
+    skip = 0,
+    top = 20,
+    locale = 1054
+) { result ->
+    when (result) {
+        is CategoryResult.SuccessMenuCampaignsRaw -> {
+            val menuCategories = result.result
+            // Handle menu categories
+        }
+        is CategoryResult.Error -> {
+            // Handle error
+        }
+    }
+}
+```
+
+---
+
+### getFavouriteCategories
+
+Retrieves the user's favorite categories based on their preferences.
+
+- Request (caller-supplied)
+
+| Field Name | Description                               | Mandatory | Data Type |
+|------------|-------------------------------------------|-----------|-----------||
+| skip       | Number of records to skip for pagination | O         | Int?      |
+| top        | Maximum number of records to return      | O         | Int?      |
+| locale     | Locale identifier for content localization | O         | Int?      |
+
+- Response (`CategoryResult.SuccessFavouriteCategoriesRaw`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = categoryService.getFavouriteCategories(
+    skip = 0,
+    top = 5,
+    locale = 1033
+)
+
+// Callback
+categoryService.getFavouriteCategories(
+    skip = null,
+    top = 10,
+    locale = 1054
+) { result ->
+    when (result) {
+        is CategoryResult.SuccessFavouriteCategoriesRaw -> {
+            val favouriteCategories = result.result
+            // Handle favourite categories
+        }
+        is CategoryResult.Error -> {
+            // Handle error
+        }
+    }
+}
+```
+
+---
+
 ## Summary
 
 The CategoryUseCase provides essential category management functionality for organizing and discovering campaigns within the Buzzebees SDK. It offers hierarchical category browsing with configuration-based filtering and localization support for building category navigation systems in e-commerce and rewards applications.

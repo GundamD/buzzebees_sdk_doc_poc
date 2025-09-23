@@ -6,7 +6,9 @@ This comprehensive guide covers campaign redemption validation flow and error ha
 
 ## Overview
 
-The campaign handling system implements a robust **validation process** following the standard flow: **call detail → validate → if no issue → call redeem, else show alert or disable button**. This validation flow ensures data integrity, prevents fraudulent activities, and provides clear user feedback for all campaign states and error conditions.
+The campaign handling system implements a robust **validation process** following the standard flow: **call detail → validate readyToUse status → if ready → call redeem, else show alert or disable button**. This validation flow ensures data integrity, prevents fraudulent activities, and provides clear user feedback for all campaign states and error conditions.
+
+**New SDK Enhancement**: Starting from the updated SDK version, `getCampaignDetail()` automatically calculates and includes a `readyToUse` status object that pre-validates campaign conditions. This eliminates the need for complex client-side validation logic while maintaining all validation functionality.
 
 **Key Purpose**: Show developers how to properly implement the campaign detail validation flow that matches production Buzzebees application behavior.
 
@@ -15,10 +17,29 @@ The campaign handling system implements a robust **validation process** followin
 The recommended implementation follows this sequence:
 
 1. **Call `getCampaignDetail()`** - Get campaign information from server
-2. **Validate campaign data** - Check all business rules and user eligibility  
-3. **Handle validation result**:
-   - ✅ **No issues** → Enable redeem button → Call `redeem()` when clicked
-   - ❌ **Has issues** → Show appropriate alert or disable redeem button
+2. **Check `readyToUse` status** - SDK automatically validates all business rules and user eligibility  
+3. **Handle readyToUse result**:
+   - ✅ **`isReadyToUse = true`** → Enable redeem button → Call `redeem()` when clicked
+   - ❌ **`isReadyToUse = false`** → Show appropriate alert based on `message` and `code` or disable redeem button
+
+### SDK-Calculated ReadyToUse
+
+The `readyToUse` field in `CampaignDetails` is automatically calculated by the SDK and includes:
+
+```kotlin
+data class ReadyToUse(
+    var isReadyToUse: Boolean? = false,  // Campaign is ready for redemption
+    var message: String? = null,         // Status message (reason if not ready)
+    var code: String? = null             // Status code identifier
+)
+```
+
+**SDK Auto-Validation**: The SDK automatically checks:
+- User authentication status (Device vs Authenticated login)
+- Campaign expiration using server time
+- Available quantity and sold count
+- User eligibility and condition pass status
+- All condition alerts and business rules
 
 ### Required Understanding
 
@@ -30,11 +51,66 @@ To effectively implement this flow, developers need to understand these related 
 
 **Why ProfileUseCase Matters**: Campaign validation requires user profile information to determine login type (Device vs Authenticated), current point balance, and user eligibility. The validation logic heavily depends on these profile attributes.
 
-This guide focuses specifically on **validation logic** and **error handling patterns** that bridge campaign and profile data.
+This guide focuses specifically on **how to use the SDK's readyToUse validation** and **error handling patterns** for optimal user experience.
 
 ---
 
-## Production Validation Decision Tree
+## SDK ReadyToUse Validation Approach
+
+**Recommended Approach**: Use the SDK's built-in `readyToUse` validation for simplicity and consistency.
+
+```kotlin
+/**
+ * Modern SDK approach - Use readyToUse field
+ * Automatically calculated by SDK in getCampaignDetail()
+ */
+class ModernCampaignValidator {
+    
+    fun validateCampaignForRedemption(campaignDetails: CampaignDetails): CampaignValidationResult {
+        val readyToUse = campaignDetails.readyToUse
+        
+        return if (readyToUse.isReadyToUse == true) {
+            CampaignValidationResult.Success
+        } else {
+            // Convert readyToUse code to appropriate error
+            val error = mapReadyToUseCodeToError(
+                code = readyToUse.code,
+                message = readyToUse.message ?: "Campaign not available"
+            )
+            CampaignValidationResult.Error(error)
+        }
+    }
+    
+    private fun mapReadyToUseCodeToError(code: String?, message: String): CampaignValidationError {
+        return when (code) {
+            "1" -> CampaignValidationError.SoldOut(message)
+            "2" -> CampaignValidationError.MaxPerPerson(message)
+            "3" -> CampaignValidationError.CoolDown(message)
+            "1403" -> CampaignValidationError.ConditionInvalid(message)
+            "1406" -> CampaignValidationError.SponsorOnly(message)
+            "1409" -> CampaignValidationError.Expired(message)
+            "1410" -> CampaignValidationError.CampaignPending(message)
+            "1416" -> CampaignValidationError.VersionExpired(message)
+            "1427" -> CampaignValidationError.TermsViolation(message)
+            else -> {
+                // Handle authentication and other conditions
+                when {
+                    message.contains("authenticated", ignoreCase = true) ->
+                        CampaignValidationError.DeviceLogin(message)
+                    message.contains("point", ignoreCase = true) ||
+                    message.contains("insufficient", ignoreCase = true) ->
+                        CampaignValidationError.InsufficientPoints(message)
+                    else -> CampaignValidationError.CustomCondition(message)
+                }
+            }
+        }
+    }
+}
+```
+
+## Legacy Manual Validation (Optional Reference)
+
+**Note**: The following manual validation approach is maintained for reference and advanced use cases. **Most developers should use the SDK's readyToUse field** instead of implementing manual validation.
 
 Based on actual implementation logic, the campaign validation follows this priority order:
 
@@ -161,25 +237,25 @@ class ProductionCampaignValidator {
 
 ---
 
-## Validation Error Mapping Table
+## ReadyToUse Status Code Mapping Table
 
-| Priority | Condition | Field Check | Error ID | User Action | UI Behavior |
-|----------|-----------|-------------|-----------|-------------|-------------|
-| 1 | Device Login | `loginType == LoginType.DEVICE` | `DEVICE_LOGIN` | No action needed | Hide redeem button |
-| 2 | Insufficient Points | `currentPoints < pointPerUnit` | `INSUFFICIENT_POINTS` | Show point purchase | Display point shortage |
-| 3a | Campaign Expired | `isConditionPass && remainingDays < 1` | `EXPIRED` | Suggest alternatives | Show expiry date |
-| 3b | Quantity Zero | `isConditionPass && qty <= 0` | `SOLD_OUT` | Find similar campaigns | Show sold out badge |
-| 3c | Item Count Sold Out | `isConditionPass && itemCountSold >= quantity` | `SOLD_OUT` | Find similar campaigns | Show sold out badge |
-| 4.1 | Condition Alert 1 | `!isConditionPass && conditionAlertId == "1"` | `SOLD_OUT` | Find similar campaigns | Show sold out badge |
-| 4.2 | Condition Alert 2 | `!isConditionPass && conditionAlertId == "2"` | `MAX_PER_PERSON` | Show redemption history | Display usage limit |
-| 4.3 | Condition Alert 3 | `!isConditionPass && conditionAlertId == "3"` | `COOL_DOWN` | Show next available time | Display countdown |
-| 4.4 | Condition Invalid | `!isConditionPass && conditionAlertId == "1403"` | `CONDITION_INVALID` | Show condition details | Display requirements |
-| 4.5 | Sponsor Only | `!isConditionPass && conditionAlertId == "1406"` | `SPONSOR_ONLY` | Upgrade membership | Show upgrade prompt |
-| 4.6 | Expired (Alert) | `!isConditionPass && conditionAlertId == "1409"` | `EXPIRED` | Suggest alternatives | Show expiry date |
-| 4.7 | Campaign Pending | `!isConditionPass && conditionAlertId == "1410"` | `CAMPAIGN_PENDING` | Show start date | Display countdown |
-| 4.8 | Version Expired | `!isConditionPass && conditionAlertId == "1416"` | `VERSION_EXPIRED` | Redirect to app store | Show update dialog |
-| 4.9 | Terms Violation | `!isConditionPass && conditionAlertId == "1427"` | `TERMS_VIOLATION` | Review terms & conditions | Display terms violation |
-| 4.10 | Custom Condition | `!isConditionPass && other conditionAlertId` | `CUSTOM_CONDITION` | Follow server message | Show server message |
+| Ready Status | Code | Message Pattern | Error Type | User Action | UI Behavior |
+|--------------|------|-----------------|------------|-------------|-------------|
+| `false` | `"1"` | "Campaign sold out" | `SOLD_OUT` | Find similar campaigns | Show sold out badge |
+| `false` | `"2"` | "Max redemption per person reached" | `MAX_PER_PERSON` | Show redemption history | Display usage limit |
+| `false` | `"3"` | "Campaign in cool down period" | `COOL_DOWN` | Show next available time | Display countdown |
+| `false` | `"1403"` | "Condition invalid" | `CONDITION_INVALID` | Show condition details | Display requirements |
+| `false` | `"1406"` | "Sponsor only campaign" | `SPONSOR_ONLY` | Upgrade membership | Show upgrade prompt |
+| `false` | `"1409"` | "Campaign expired" | `EXPIRED` | Suggest alternatives | Show expiry date |
+| `false` | `"1410"` | "Campaign not started yet" | `CAMPAIGN_PENDING` | Show start date | Display countdown |
+| `false` | `"1416"` | "App version expired" | `VERSION_EXPIRED` | Redirect to app store | Show update dialog |
+| `false` | `"1427"` | "Terms and conditions violation" | `TERMS_VIOLATION` | Review terms & conditions | Display terms violation |
+| `false` | `null` | "Not Authenticated" | `DEVICE_LOGIN` | No action needed | Hide redeem button |
+| `false` | `null` | "Campaign Expired" | `EXPIRED` | Suggest alternatives | Show expiry date |
+| `false` | `null` | "Campaign sold out" | `SOLD_OUT` | Find similar campaigns | Show sold out badge |
+| `false` | `null` | Contains "point" | `INSUFFICIENT_POINTS` | Show point purchase | Display point shortage |
+| `false` | `null` | Custom message | `CUSTOM_CONDITION` | Follow server message | Show server message |
+| `true` | `null` | `null` | `SUCCESS` | Enable redemption | Show redeem button |
 
 ---
 
@@ -216,12 +292,12 @@ sealed class CampaignValidationResult {
 
 ---
 
-## Production Implementation Example
+## Modern Implementation Example
 
 ```kotlin
 class CampaignDetailActivity : AppCompatActivity() {
     
-    private val validator = ProductionCampaignValidator()
+    private val validator = ModernCampaignValidator()
     private val campaignUseCase = BuzzebeesSDK.instance().campaignUseCase
     private lateinit var redeemButton: Button
     
@@ -239,7 +315,7 @@ class CampaignDetailActivity : AppCompatActivity() {
     private fun loadCampaignDetail(campaignId: String) {
         showLoading()
         
-        // Step 1: Call getCampaignDetail()
+        // Step 1: Call getCampaignDetail() - SDK automatically calculates readyToUse
         campaignUseCase.getCampaignDetail(campaignId) { result ->
             hideLoading()
             
@@ -248,7 +324,7 @@ class CampaignDetailActivity : AppCompatActivity() {
                     val campaignDetails = result.result
                     displayCampaignInfo(campaignDetails)
                     
-                    // Step 2: Validate campaign data
+                    // Step 2: Use SDK's readyToUse validation
                     validateCampaignAndSetupUI(campaignDetails)
                 }
                 is CampaignResult.Error -> {
@@ -259,20 +335,16 @@ class CampaignDetailActivity : AppCompatActivity() {
     }
     
     private fun validateCampaignAndSetupUI(campaignDetails: CampaignDetails) {
-        val validationResult = validator.validateCampaignForRedemption(
-            campaignDetails = campaignDetails,
-            internalProfile = getCurrentUserProfile(),
-            currentPoints = getUserCurrentPoints()
-        )
+        val validationResult = validator.validateCampaignForRedemption(campaignDetails)
         
         when (validationResult) {
             is CampaignValidationResult.Success -> {
-                // ✅ No issues - Enable redeem button
+                // ✅ Ready to redeem - Enable redeem button
                 setupRedeemButton(campaignDetails, enabled = true)
             }
             is CampaignValidationResult.Error -> {
-                // ❌ Has issues - Handle based on error type
-                handleValidationError(validationResult.error, campaignDetails)
+                // ❌ Not ready - Handle based on readyToUse error type
+                handleReadyToUseError(validationResult.error, campaignDetails)
             }
         }
     }
@@ -289,7 +361,7 @@ class CampaignDetailActivity : AppCompatActivity() {
         }
     }
     
-    private fun handleValidationError(error: CampaignValidationError, campaignDetails: CampaignDetails) {
+    private fun handleReadyToUseError(error: CampaignValidationError, campaignDetails: CampaignDetails) {
         when (error) {
             is CampaignValidationError.DeviceLogin -> {
                 // Hide redeem button for device users
@@ -331,7 +403,7 @@ class CampaignDetailActivity : AppCompatActivity() {
             }
             
             is CampaignValidationError.CustomCondition -> {
-                // Show server message
+                // Show server message from readyToUse.message
                 redeemButton.isEnabled = false
                 redeemButton.text = "Not Available"
                 showCustomAlert(error.message)
@@ -362,6 +434,7 @@ class CampaignDetailActivity : AppCompatActivity() {
             }
         }
     }
+```
     
     // UI Helper Methods
     private fun showPointsNeededAlert(pointsNeeded: Double) {
@@ -402,28 +475,32 @@ class CampaignDetailActivity : AppCompatActivity() {
 ### Key Implementation Points
 
 ```kotlin
-// Standard Flow Implementation
+// Modern SDK Flow Implementation
 class CampaignFlow {
     
     suspend fun executeCampaignFlow(campaignId: String): CampaignFlowResult {
-        // Step 1: Get campaign details
+        // Step 1: Get campaign details (SDK calculates readyToUse automatically)
         val campaignDetails = getCampaignDetails(campaignId) 
             ?: return CampaignFlowResult.Error("Campaign not found")
         
-        // Step 2: Validate
-        val validationResult = validator.validateCampaignForRedemption(
-            campaignDetails, userProfile, userPoints
-        )
+        // Step 2: Use SDK's readyToUse validation
+        val readyToUse = campaignDetails.readyToUse
         
-        // Step 3: Handle result
-        return when (validationResult) {
-            is CampaignValidationResult.Success -> {
-                CampaignFlowResult.ReadyToRedeem(campaignDetails)
-            }
-            is CampaignValidationResult.Error -> {
-                CampaignFlowResult.ValidationFailed(validationResult.error)
-            }
+        // Step 3: Handle result based on readyToUse status
+        return if (readyToUse.isReadyToUse == true) {
+            CampaignFlowResult.ReadyToRedeem(campaignDetails)
+        } else {
+            val error = mapReadyToUseToError(readyToUse.code, readyToUse.message)
+            CampaignFlowResult.ValidationFailed(error)
         }
+    }
+    
+    private fun mapReadyToUseToError(code: String?, message: String?): CampaignValidationError {
+        // Use the ModernCampaignValidator mapping logic
+        return ModernCampaignValidator().mapReadyToUseCodeToError(
+            code = code,
+            message = message ?: "Campaign not available"
+        )
     }
 }
 
@@ -438,20 +515,35 @@ sealed class CampaignFlowResult {
 
 ## Summary
 
-This Campaign Handling & Validation Guide provides **production-ready validation logic** that shows developers how to properly handle campaign details and implement validation that matches real Buzzebees application behavior.
+This Campaign Handling & Validation Guide provides **modern SDK-based validation logic** using the built-in `readyToUse` field that shows developers how to properly handle campaign details and implement validation that matches real Buzzebees application behavior.
 
 ### Key Features
 
-- **🔒 Production Logic**: Exact validation flow used in live applications
-- **🎯 Priority-Based Validation**: 12-step validation process with proper priority ordering  
-- **📱 Real Error Handling**: Handle campaign details based on actual field values
-- **🔧 Easy Integration**: Seamlessly integrates with existing CampaignUseCase methods
-- **⚡ UI-Ready**: Clear guidance on how to handle each error type in the UI
+- **🆕 SDK Auto-Validation**: Use the built-in `readyToUse` field calculated by SDK
+- **🎯 Simplified Integration**: No need for complex manual validation logic
+- **📱 Production-Ready**: Exact validation results used in live applications
+- **🔧 Easy Implementation**: Clear guidance on how to handle each readyToUse status in the UI
+- **⚡ Consistent Results**: Server-side validation ensures accuracy across all clients
+
+### Migration Benefits
+
+**Old Approach** (Manual Validation):
+- Complex client-side validation logic
+- Risk of inconsistency between apps
+- Manual calculation of expiry, quantity, etc.
+- Prone to client-time manipulation
+
+**New Approach** (SDK ReadyToUse):
+- ✅ **Server-calculated validation**
+- ✅ **Consistent across all platforms**
+- ✅ **Secure server-time based calculations**
+- ✅ **Simple client-side implementation**
+- ✅ **Automatic updates when business rules change**
 
 ### Integration Points
 
-- **Extends**: [CampaignUseCase Guide](CampaignUseCase_GUIDE.md) with validation logic
-- **Uses**: Existing `getCampaignDetail()` and `redeem()` methods from CampaignUseCase
-- **Provides**: Complete validation framework for campaign redemption flows
+- **Extends**: [CampaignUseCase Guide](CampaignUseCase_GUIDE.md) with readyToUse validation
+- **Uses**: Built-in `readyToUse` field from `getCampaignDetail()` method
+- **Provides**: Complete validation framework using SDK's auto-calculated status
 
-**Purpose**: This guide focuses on **how to handle campaign details properly** - checking the right fields, applying the correct business logic, and providing appropriate user feedback based on campaign state and user conditions.
+**Purpose**: This guide focuses on **how to use the SDK's readyToUse validation** - checking the right fields (`isReadyToUse`, `message`, `code`) and providing appropriate user feedback based on campaign readiness status.

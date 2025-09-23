@@ -48,6 +48,13 @@ auth.saveWalletToken("WALLET_TOKEN_VALUE")
 auth.saveFcmToken("FCM_TOKEN_VALUE")
 ```
 
+**saveLocale(locale: Int)**: Saves the user's locale preference.
+
+```kotlin
+auth.saveLocale(1054) // Thai locale
+auth.saveLocale(1033) // English locale
+```
+
 ---
 
 ## Retrieving Tokens
@@ -80,6 +87,12 @@ val walletToken = auth.getWalletToken()
 
 ```kotlin
 val fcmToken = auth.getFcmToken()
+```
+
+**getLocale()**: Retrieves the saved locale preference.
+
+```kotlin
+val locale = auth.getLocale() // Returns Int? (1054 for Thai, 1033 for English, etc.)
 ```
 
 ---
@@ -116,7 +129,13 @@ auth.removeWalletToken()
 auth.removeFcmToken()
 ```
 
-**clear()**: Removes all stored tokens.
+**removeLocale()**: Removes the saved locale preference.
+
+```kotlin
+auth.removeLocale()
+```
+
+**clear()**: Removes all stored tokens and locale.
 
 ```kotlin
 auth.clear()
@@ -126,7 +145,7 @@ auth.clear()
 
 ## Updating Multiple Tokens
 
-**updateTokens(...)**: Updates multiple tokens simultaneously. Pass `null` to skip updating a specific token.
+**updateTokens(...)**: Updates multiple tokens and locale simultaneously. Pass `null` to skip updating a specific value.
 
 ```kotlin
 auth.updateTokens(
@@ -134,7 +153,8 @@ auth.updateTokens(
     jwtToken = "NEW_JWT_TOKEN",
     eWalletToken = null,
     walletToken = "NEW_WALLET_TOKEN",
-    fcmToken = null
+    fcmToken = null,
+    locale = 1054 // Thai locale
 )
 ```
 
@@ -182,11 +202,27 @@ if (auth.hasFcmToken()) {
 }
 ```
 
+**hasLocale()**: Returns true if the locale preference exists.
+
+```kotlin
+if (auth.hasLocale()) {
+    println("Locale preference exists")
+}
+```
+
 **hasAnyToken()**: Returns true if at least one token exists.
 
 ```kotlin
 if (auth.hasAnyToken()) {
     println("At least one token exists")
+}
+```
+
+**hasToken()**: Returns true if authentication token exists (alias for hasAuthToken).
+
+```kotlin
+if (auth.hasToken()) {
+    println("Authentication token exists")
 }
 ```
 
@@ -217,6 +253,11 @@ println("Has JWT Token? ${tokenInfo.hasJwtToken}, Length: ${tokenInfo.jwtTokenLe
 println("Has E-Wallet Token? ${tokenInfo.hasEWalletToken}, Length: ${tokenInfo.eWalletTokenLength}")
 println("Has Wallet Token? ${tokenInfo.hasWalletToken}, Length: ${tokenInfo.walletTokenLength}")
 println("Has FCM Token? ${tokenInfo.hasFcmToken}, Length: ${tokenInfo.fcmTokenLength}")
+
+// Check locale separately
+val locale = auth.getLocale()
+val hasLocale = auth.hasLocale()
+println("Has Locale? $hasLocale, Value: $locale")
 ```
 
 The `TokenInfo` object includes the following properties:
@@ -231,6 +272,36 @@ The `TokenInfo` object includes the following properties:
 * `eWalletTokenLength`: Length of the e-wallet token, or 0 if null.
 * `walletTokenLength`: Length of the wallet token, or 0 if null.
 * `fcmTokenLength`: Length of the FCM token, or 0 if null.
+
+## Locale Management
+
+The AuthProvider also manages user locale preferences with the following locale codes:
+
+* `1054`: Thai locale
+* `1033`: English locale
+* Other locale codes as supported by your application
+
+```kotlin
+// Save user's preferred locale
+auth.saveLocale(1054) // Set to Thai
+
+// Retrieve current locale
+val currentLocale = auth.getLocale()
+when (currentLocale) {
+    1054 -> println("Current locale: Thai")
+    1033 -> println("Current locale: English")
+    null -> println("No locale preference set")
+    else -> println("Locale: $currentLocale")
+}
+
+// Check if locale is set
+if (auth.hasLocale()) {
+    println("User has locale preference")
+}
+
+// Remove locale preference
+auth.removeLocale()
+```
 
 ---
 

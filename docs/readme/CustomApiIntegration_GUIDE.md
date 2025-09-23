@@ -12,10 +12,9 @@ This guide provides comprehensive documentation for creating custom API services
 4. [Usage Patterns](#usage-patterns)
 5. [Advanced Configuration](#advanced-configuration)
 6. [Custom Interceptors](#custom-interceptors)
-7. [Extension Functions](#extension-functions)
-8. [Best Practices](#best-practices)
-9. [Examples](#examples)
-10. [Migration Guide](#migration-guide)
+7. [Best Practices](#best-practices)
+8. [Examples](#examples)
+9. [Migration Guide](#migration-guide)
 
 ---
 
@@ -26,7 +25,7 @@ The Custom API Integration feature allows you to:
 - **Reuse SDK Configuration**: Leverage pre-configured timeouts, authentication, and interceptors
 - **Create Custom APIs**: Build your own Retrofit API services with minimal setup
 - **Advanced Configuration**: Customize base URLs, add interceptors, and modify converter factories
-- **Direct HTTP Access**: Use the configured OkHttpClient for direct HTTP calls
+- **Secure API Access**: Create custom API services safely without exposing internal details
 - **Performance Optimization**: Share connection pools and thread pools with the SDK
 
 ### Benefits
@@ -98,32 +97,18 @@ val secureApi = BuzzebeesSDK.instance().customApiBuilder()
 | Method | Description | Return Type |
 |--------|-------------|-------------|
 | `createCustomApiService(Class<T>)` | Create a simple custom API service | `T` |
-| `customApiBuilder()` | Get a builder for advanced configuration | `CustomApiBuilder` |
-| `getConfiguredOkHttpClient()` | Get the pre-configured OkHttpClient | `OkHttpClient` |
-| `getConfiguredRetrofit()` | Get the pre-configured Retrofit instance | `Retrofit` |
-| `getCustomApiProvider()` | Get the custom API provider interface | `CustomApiProvider` |
+| `customApiBuilder()` | Get a builder for advanced configuration | `ICustomApiBuilder` |
 
-### CustomApiBuilder Methods
+### ICustomApiBuilder Methods
 
 | Method | Description | Return Type |
 |--------|-------------|-------------|
-| `baseUrl(String)` | Set custom base URL | `CustomApiBuilder` |
-| `addInterceptor(Interceptor)` | Add additional interceptor | `CustomApiBuilder` |
-| `addInterceptors(Collection<Interceptor>)` | Add multiple interceptors | `CustomApiBuilder` |
-| `converterFactory(Converter.Factory)` | Set custom converter factory | `CustomApiBuilder` |
+| `baseUrl(String)` | Set custom base URL | `ICustomApiBuilder` |
+| `addInterceptor(Interceptor)` | Add additional interceptor | `ICustomApiBuilder` |
+| `addInterceptors(Collection<Interceptor>)` | Add multiple interceptors | `ICustomApiBuilder` |
+| `converterFactory(Converter.Factory)` | Set custom converter factory | `ICustomApiBuilder` |
 | `build(Class<T>)` | Build single API service | `T` |
 | `buildMultiple(Class<*>...)` | Build multiple API services | `List<Any>` |
-
-### CustomApiProvider Interface
-
-```kotlin
-interface CustomApiProvider {
-    fun <T> createApiService(serviceClass: Class<T>): T
-    fun getOkHttpClient(): OkHttpClient
-    fun getRetrofit(): Retrofit
-    fun customApiBuilder(): CustomApiBuilder
-}
-```
 
 ---
 
@@ -189,33 +174,43 @@ class WeatherRepositoryImpl : WeatherRepository {
 }
 ```
 
-### Pattern 3: Direct OkHttp Usage
+### Pattern 3: File Operations with Custom APIs
 
 ```kotlin
-class FileUploadService {
-    private val okHttpClient = BuzzebeesSDK.instance().getConfiguredOkHttpClient()
+// Create a dedicated API interface for file operations
+interface FileApi {
+    @Multipart
+    @POST("upload")
+    suspend fun uploadFile(
+        @Part file: MultipartBody.Part
+    ): UploadResponse
     
-    suspend fun uploadFile(file: File, uploadUrl: String): Boolean = withContext(Dispatchers.IO) {
-        val requestBody = file.asRequestBody("application/octet-stream".toMediaType())
-        val request = Request.Builder()
-            .url(uploadUrl)
-            .post(requestBody)
-            .build()
-            
-        okHttpClient.newCall(request).execute().use { it.isSuccessful }
+    @GET
+    suspend fun downloadFile(@Url downloadUrl: String): ResponseBody
+}
+
+class FileUploadService {
+    private val fileApi = BuzzebeesSDK.instance().customApiBuilder()
+        .baseUrl("https://file-service.com/api/")
+        .build(FileApi::class.java)
+    
+    suspend fun uploadFile(file: File): Boolean {
+        return try {
+            val requestBody = file.asRequestBody("application/octet-stream".toMediaType())
+            val filePart = MultipartBody.Part.createFormData("file", file.name, requestBody)
+            val response = fileApi.uploadFile(filePart)
+            response.success == true
+        } catch (e: Exception) {
+            false
+        }
     }
     
-    suspend fun downloadFile(downloadUrl: String): ByteArray? = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url(downloadUrl)
-            .build()
-            
-        okHttpClient.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                response.body?.bytes()
-            } else {
-                null
-            }
+    suspend fun downloadFile(downloadUrl: String): ByteArray? {
+        return try {
+            val response = fileApi.downloadFile(downloadUrl)
+            response.bytes()
+        } catch (e: Exception) {
+            null
         }
     }
 }
@@ -365,43 +360,6 @@ class RetryInterceptor(private val maxRetries: Int = 3) : Interceptor {
 
 ---
 
-## Extension Functions
-
-Include the extension functions for cleaner syntax:
-
-```kotlin
-import com.buzzebees.sdk.extensions.*
-
-// Reified generics extension
-val weatherApi = BuzzebeesSDK.instance().createCustomApi<WeatherApi>()
-
-// Custom builder shorthand
-val paymentApi = BuzzebeesSDK.instance().customApi()
-    .baseUrl("https://payments.com/")
-    .build(PaymentApi::class.java)
-
-// Multiple APIs at once
-val (userApi, productApi) = BuzzebeesSDK.instance().createCustomApis(
-    UserApi::class.java,
-    ProductApi::class.java
-)
-```
-
-### Available Extensions
-
-```kotlin
-// Extension function for easier custom API creation
-fun BuzzebeesSDK.customApi(): CustomApiBuilder
-
-// Extension function for creating multiple custom APIs
-fun BuzzebeesSDK.createCustomApis(vararg serviceClasses: Class<*>): List<Any>
-
-// Extension function with reified generics
-inline fun <reified T> BuzzebeesSDK.createCustomApi(): T
-```
-
----
-
 ## Best Practices
 
 ### 1. Reuse API Instances
@@ -509,6 +467,16 @@ val protoApi = BuzzebeesSDK.instance().customApiBuilder()
 ### Real-World Integration Example
 
 ```kotlin
+// Define file API interface for upload operations
+interface FileApi {
+    @Multipart
+    @POST("products/{productId}/image")
+    suspend fun uploadProductImage(
+        @Path("productId") productId: String,
+        @Part image: MultipartBody.Part
+    ): UploadResponse
+}
+
 class ECommerceApiService {
     private val productApi = BuzzebeesSDK.instance().customApiBuilder()
         .baseUrl("https://ecommerce-api.com/v2/")
@@ -522,7 +490,11 @@ class ECommerceApiService {
         .addInterceptor(RateLimitInterceptor(maxRequestsPerSecond = 5))
         .build(PaymentApi::class.java)
     
-    private val okHttpClient = BuzzebeesSDK.instance().getConfiguredOkHttpClient()
+    // File operations handled through dedicated API interfaces
+    private val fileApi = BuzzebeesSDK.instance().customApiBuilder()
+        .baseUrl("https://ecommerce-api.com/v2/")
+        .addInterceptor(ApiKeyInterceptor(BuildConfig.ECOMMERCE_API_KEY))
+        .build(FileApi::class.java)
     
     suspend fun searchProducts(query: String): List<Product> {
         return try {
@@ -543,12 +515,9 @@ class ECommerceApiService {
     suspend fun uploadProductImage(productId: String, imageFile: File): Boolean {
         return try {
             val requestBody = imageFile.asRequestBody("image/jpeg".toMediaType())
-            val request = Request.Builder()
-                .url("https://ecommerce-api.com/v2/products/$productId/image")
-                .post(requestBody)
-                .build()
-                
-            okHttpClient.newCall(request).execute().use { it.isSuccessful }
+            val filePart = MultipartBody.Part.createFormData("image", imageFile.name, requestBody)
+            val response = fileApi.uploadProductImage(productId, filePart)
+            response.success == true
         } catch (e: Exception) {
             false
         }
@@ -654,7 +623,7 @@ class ApiClient {
 1. **Start with Simple APIs**: Begin by migrating simple API services using `createCustomApiService()`
 2. **Add Custom Configuration**: Use `customApiBuilder()` for APIs requiring specific configuration
 3. **Update Base URLs**: Gradually update base URLs while maintaining functionality
-4. **Replace OkHttp Clients**: Replace manual OkHttp clients with `getConfiguredOkHttpClient()`
+4. **Use Available Methods**: Use the provided SDK methods for API creation
 5. **Test Thoroughly**: Ensure all functionality works with the new configuration
 6. **Remove Old Code**: Remove manual HTTP configuration code once migration is complete
 

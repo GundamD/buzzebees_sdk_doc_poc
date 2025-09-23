@@ -289,6 +289,118 @@ profileService.updateProfile(file, updateOptions) { result ->
 
 ---
 
+### updateLanguage
+
+Updates the user's preferred language locale.
+
+- Request (caller-supplied)
+
+| Field Name | Description     | Mandatory | Data Type |
+|------------|-----------------|-----------|----------|
+| locale     | Language locale | M         | String   |
+
+- Response (`Profile`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.updateLanguage("1054") // Thai locale
+
+// For English locale
+val result = profileService.updateLanguage("1033") // English locale
+
+when (result) {
+    is ProfileResult.SuccessUpdateLanguage -> {
+        // Handle successful language update
+        val profile = result.result
+        println("Language updated to locale: ${profile.locale}")
+    }
+    is ProfileResult.Error -> {
+        // Handle error
+        val errorCode = result.error.code
+        val errorMessage = result.error.message
+    }
+}
+
+// Callback
+profileService.updateLanguage("1054") { result ->
+    when (result) {
+        is ProfileResult.SuccessUpdateLanguage -> {
+            // Handle successful language update
+            val profile = result.result
+            println("Language updated to locale: ${profile.locale}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+#### Supported Locales
+
+| Locale Code | Language |
+|-------------|----------|
+| "1033"      | English  |
+| "1054"      | Thai     |
+
+---
+
+### updateNotification
+
+Updates user notification preferences.
+
+- Request (caller-supplied)
+
+| Field Name   | Description               | Mandatory | Data Type |
+|--------------|---------------------------|-----------|----------|
+| notification | Notification enabled flag | M         | Boolean   |
+
+- Response (`Profile`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.updateNotification(true)
+
+when (result) {
+    is ProfileResult.SuccessUpdateNotification -> {
+        // Handle successful notification update
+        val profile = result.result
+        println("Notification enabled: ${profile.notificationEnable}")
+    }
+    is ProfileResult.Error -> {
+        // Handle error
+        val errorCode = result.error.code
+        val errorMessage = result.error.message
+    }
+}
+
+// Callback
+profileService.updateNotification(true) { result ->
+    when (result) {
+        is ProfileResult.SuccessUpdateNotification -> {
+            // Handle successful notification update
+            val profile = result.result
+            println("Notification enabled: ${profile.notificationEnable}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
 ### changePassword
 
 Changes the user's password.
@@ -360,96 +472,6 @@ profileService.changePassword(currentPassword, newPassword) { result ->
                     ErrorAction.ShowGenericError(result.error.message)
             }
             handleErrorAction(action)
-        }
-    }
-}
-```
-
----
-
-### updateShipping
-
-Updates user shipping information.
-
-- Request (caller-supplied)
-
-| Field Name | Description               | Mandatory | Data Type    |
-|------------|---------------------------|-----------|--------------|
-| form       | Shipping information form | M         | ShippingForm |
-
-### ShippingForm Fields
-
-| Field Name              | Description                | Data Type |
-|-------------------------|----------------------------|-----------|
-| shippingFirstName       | Shipping first name        | String?   |
-| shippingLastName        | Shipping last name         | String?   |
-| shippingProvinceCode    | Shipping province code     | String?   |
-| shippingDistrictCode    | Shipping district code     | String?   |
-| shippingSubDistrictCode | Shipping sub-district code | String?   |
-| shippingZipCode         | Shipping postal code       | String?   |
-| shippingAddress         | Shipping address           | String?   |
-| shippingProvinceName    | Shipping province name     | String?   |
-| shippingDistrictName    | Shipping district name     | String?   |
-| shippingSubDistrictName | Shipping sub-district name | String?   |
-| shippingContactNumber   | Shipping contact number    | String?   |
-| shippingEmail           | Shipping email             | String?   |
-
-- Response (`Shipping`)
-  HTTP status: 200
-
-### Shipping Entity Fields
-
-| Field Name              | Description                | Data Type | JSON Field              |
-|-------------------------|----------------------------|-----------|-------------------------|
-| shippingFirstName       | Shipping first name        | String?   | ShippingFirstName       |
-| shippingLastName        | Shipping last name         | String?   | ShippingLastName        |
-| shippingContactNumber   | Shipping contact number    | String?   | ShippingContactNumber   |
-| shippingAddress         | Shipping address           | String?   | ShippingAddress         |
-| shippingSubDistrictCode | Shipping sub-district code | String?   | ShippingSubDistrictCode |
-| shippingSubDistrictName | Shipping sub-district name | String?   | ShippingSubDistrictName |
-| shippingDistrictCode    | Shipping district code     | String?   | ShippingDistrictCode    |
-| shippingDistrictName    | Shipping district name     | String?   | ShippingDistrictName    |
-| shippingProvinceCode    | Shipping province code     | String?   | ShippingProvinceCode    |
-| shippingProvinceName    | Shipping province name     | String?   | ShippingProvinceName    |
-| shippingZipcode         | Shipping postal code       | String?   | ShippingZipcode         |
-| shippingEmail           | Shipping email             | String?   | ShippingEmail           |
-| rowKey                  | Database row key           | String?   | RowKey                  |
-| partitionKey            | Database partition key     | String?   | PartitionKey            |
-
-- Usage
-
-```kotlin
-// Create shipping form
-val shippingForm = ShippingForm(
-    shippingFirstName = "John",
-    shippingLastName = "Doe",
-    shippingAddress = "123 Main Street",
-    shippingProvinceCode = "10",
-    shippingDistrictCode = "1001",
-    shippingSubDistrictCode = "100101",
-    shippingZipCode = "10110",
-    shippingProvinceName = "Bangkok",
-    shippingDistrictName = "Phra Nakhon",
-    shippingSubDistrictName = "Phra Borom Maha Ratchawang",
-    shippingContactNumber = "0812345678",
-    shippingEmail = "john.doe@example.com"
-)
-
-// Suspend
-val result = profileService.updateShipping(shippingForm)
-
-// Callback
-profileService.updateShipping(shippingForm) { result ->
-    when (result) {
-        is ProfileResult.SuccessUpdateShipping -> {
-            // Handle successful shipping update
-            val shipping = result.result
-            println("Shipping updated: ${shipping.shippingFirstName} ${shipping.shippingLastName}")
-        }
-        is ProfileResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
         }
     }
 }
@@ -541,6 +563,41 @@ profileService.changeContactNumber(contactNumber, otp, refCode, idCard) { result
                     ErrorAction.ShowGenericError(result.error.message)
             }
             handleErrorAction(action)
+        }
+    }
+}
+```
+
+---
+
+### deleteAccount
+
+Deletes the user account.
+
+- Request (caller-supplied)
+
+No parameters required.
+
+- Response (`NoContentResponse`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.deleteAccount()
+
+// Callback
+profileService.deleteAccount { result ->
+    when (result) {
+        is ProfileResult.SuccessDelete -> {
+            // Handle successful account deletion
+            println("Account deleted successfully")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -644,13 +701,328 @@ profileService.getExpirePoint { result ->
 
 ---
 
-### deleteAccount
+### updateShipping
 
-Deletes the user account.
+Updates user shipping information.
+
+- Request (caller-supplied)
+
+| Field Name | Description               | Mandatory | Data Type    |
+|------------|---------------------------|-----------|--------------|
+| form       | Shipping information form | M         | ShippingForm |
+
+### ShippingForm Fields
+
+| Field Name              | Description                | Data Type |
+|-------------------------|----------------------------|-----------|
+| shippingFirstName       | Shipping first name        | String?   |
+| shippingLastName        | Shipping last name         | String?   |
+| shippingProvinceCode    | Shipping province code     | String?   |
+| shippingDistrictCode    | Shipping district code     | String?   |
+| shippingSubDistrictCode | Shipping sub-district code | String?   |
+| shippingZipCode         | Shipping postal code       | String?   |
+| shippingAddress         | Shipping address           | String?   |
+| shippingProvinceName    | Shipping province name     | String?   |
+| shippingDistrictName    | Shipping district name     | String?   |
+| shippingSubDistrictName | Shipping sub-district name | String?   |
+| shippingContactNumber   | Shipping contact number    | String?   |
+| shippingEmail           | Shipping email             | String?   |
+
+- Response (`Shipping`)
+  HTTP status: 200
+
+### Shipping Entity Fields
+
+| Field Name              | Description                | Data Type | JSON Field              |
+|-------------------------|----------------------------|-----------|-------------------------|
+| shippingFirstName       | Shipping first name        | String?   | ShippingFirstName       |
+| shippingLastName        | Shipping last name         | String?   | ShippingLastName        |
+| shippingContactNumber   | Shipping contact number    | String?   | ShippingContactNumber   |
+| shippingAddress         | Shipping address           | String?   | ShippingAddress         |
+| shippingSubDistrictCode | Shipping sub-district code | String?   | ShippingSubDistrictCode |
+| shippingSubDistrictName | Shipping sub-district name | String?   | ShippingSubDistrictName |
+| shippingDistrictCode    | Shipping district code     | String?   | ShippingDistrictCode    |
+| shippingDistrictName    | Shipping district name     | String?   | ShippingDistrictName    |
+| shippingProvinceCode    | Shipping province code     | String?   | ShippingProvinceCode    |
+| shippingProvinceName    | Shipping province name     | String?   | ShippingProvinceName    |
+| shippingZipcode         | Shipping postal code       | String?   | ShippingZipcode         |
+| shippingEmail           | Shipping email             | String?   | ShippingEmail           |
+| rowKey                  | Database row key           | String?   | RowKey                  |
+| partitionKey            | Database partition key     | String?   | PartitionKey            |
+
+- Usage
+
+```kotlin
+// Create shipping form
+val shippingForm = ShippingForm(
+    shippingFirstName = "John",
+    shippingLastName = "Doe",
+    shippingAddress = "123 Main Street",
+    shippingProvinceCode = "10",
+    shippingDistrictCode = "1001",
+    shippingSubDistrictCode = "100101",
+    shippingZipCode = "10110",
+    shippingProvinceName = "Bangkok",
+    shippingDistrictName = "Phra Nakhon",
+    shippingSubDistrictName = "Phra Borom Maha Ratchawang",
+    shippingContactNumber = "0812345678",
+    shippingEmail = "john.doe@example.com"
+)
+
+// Suspend
+val result = profileService.updateShipping(shippingForm)
+
+// Callback
+profileService.updateShipping(shippingForm) { result ->
+    when (result) {
+        is ProfileResult.SuccessUpdateShipping -> {
+            // Handle successful shipping update
+            val shipping = result.result
+            println("Shipping updated: ${shipping.shippingFirstName} ${shipping.shippingLastName}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getAddressList
+
+Retrieves the list of user's saved addresses.
 
 - Request (caller-supplied)
 
 No parameters required.
+
+- Response (`List<Address>`)
+  HTTP status: 200
+
+### Address Entity Fields
+
+| Field Name              | Description                | Data Type | JSON Field              |
+|-------------------------|----------------------------|-----------|-------------------------|
+| key                     | Address unique key         | String?   | key                     |
+| name                    | Full name                  | String?   | name                    |
+| firstName               | First name                 | String?   | firstName               |
+| lastName                | Last name                  | String?   | lastName                |
+| addressName             | Address nickname           | String?   | addressName             |
+| contactNumber           | Contact phone number       | String?   | contactNumber           |
+| email                   | Email address              | String?   | email                   |
+| companyName             | Company name               | String?   | companyName             |
+| taxId                   | Tax ID number              | String?   | taxId                   |
+| address                 | Street address             | String?   | address                 |
+| zipcode                 | Postal code                | String?   | zipcode                 |
+| subDistrictCode         | Sub-district code          | String?   | subDistrictCode         |
+| subDistrictName         | Sub-district name          | String?   | subDistrictName         |
+| districtCode            | District code              | String?   | districtCode            |
+| districtName            | District name              | String?   | districtName            |
+| provinceCode            | Province code              | String?   | provinceCode            |
+| provinceName            | Province name              | String?   | provinceName            |
+| countryCode             | Country code               | String?   | countryCode             |
+| countryName             | Country name               | String?   | countryName             |
+| village                 | Village                    | String?   | village                 |
+| building                | Building name              | String?   | building                |
+| number                  | House/building number      | String?   | number                  |
+| moo                     | Village number (Moo)       | String?   | moo                     |
+| soi                     | Soi (lane)                 | String?   | soi                     |
+| floor                   | Floor number               | String?   | floor                   |
+| road                    | Road                       | String?   | road                    |
+| room                    | Room number                | String?   | room                    |
+| city                    | City                       | String?   | city                    |
+| title                   | Title (Mr., Mrs., Ms.)     | String?   | title                   |
+| personType              | Person type                | String?   | personType              |
+| isDefault               | Default address flag       | Boolean?  | isDefault               |
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.getAddressList()
+
+// Callback
+profileService.getAddressList { result ->
+    when (result) {
+        is ProfileResult.SuccessAddressList -> {
+            // Handle successful address list retrieval
+            val addresses = result.result
+            addresses.forEach { address ->
+                println("Address: ${address.addressName} - ${address.address}")
+            }
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getAddressDetail
+
+Retrieves detailed information for a specific address by key.
+
+- Request (caller-supplied)
+
+| Field Name | Description        | Mandatory | Data Type |
+|------------|--------------------|-----------|----------|
+| key        | Address unique key | M         | String   |
+
+- Response (`Address`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.getAddressDetail("address_key_123")
+
+// Callback
+profileService.getAddressDetail("address_key_123") { result ->
+    when (result) {
+        is ProfileResult.SuccessAddressDetail -> {
+            // Handle successful address detail retrieval
+            val address = result.result
+            println("Address: ${address.firstName} ${address.lastName}")
+            println("Contact: ${address.contactNumber}")
+            println("Full Address: ${address.address}, ${address.districtName}, ${address.provinceName}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### updateAddress
+
+Creates a new address or updates an existing address.
+
+- Request (caller-supplied)
+
+| Field Name | Description  | Mandatory | Data Type   |
+|------------|--------------|-----------|-------------|
+| form       | Address form | M         | AddressForm |
+
+### AddressForm Fields
+
+| Field Name              | Description                | Data Type |
+|-------------------------|----------------------------|-----------|
+| key                     | Address key (null for new)| String?   |
+| name                    | Full name                  | String?   |
+| firstName               | First name                 | String?   |
+| lastName                | Last name                  | String?   |
+| addressName             | Address nickname           | String?   |
+| contactNumber           | Contact phone number       | String?   |
+| email                   | Email address              | String?   |
+| companyName             | Company name               | String?   |
+| taxId                   | Tax ID number              | String?   |
+| address                 | Street address             | String?   |
+| zipcode                 | Postal code                | String?   |
+| subDistrictCode         | Sub-district code          | String?   |
+| subDistrictName         | Sub-district name          | String?   |
+| districtCode            | District code              | String?   |
+| districtName            | District name              | String?   |
+| provinceCode            | Province code              | String?   |
+| provinceName            | Province name              | String?   |
+| countryCode             | Country code               | String?   |
+| countryName             | Country name               | String?   |
+| village                 | Village                    | String?   |
+| building                | Building name              | String?   |
+| number                  | House/building number      | String?   |
+| moo                     | Village number (Moo)       | String?   |
+| soi                     | Soi (lane)                 | String?   |
+| floor                   | Floor number               | String?   |
+| road                    | Road                       | String?   |
+| room                    | Room number                | String?   |
+| city                    | City                       | String?   |
+| title                   | Title (Mr., Mrs., Ms.)     | String?   |
+| personType              | Person type                | String?   |
+| isDefault               | Default address flag       | Boolean?  |
+
+- Response (`Address`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Create address form
+val addressForm = AddressForm(
+    key = null, // null for new address, provide key for update
+    name = null,
+    firstName = "John",
+    lastName = "Doe",
+    addressName = "Home",
+    contactNumber = "0812345678",
+    email = "john.doe@example.com",
+    companyName = null,
+    taxId = null,
+    address = "123 Main Street",
+    zipcode = "10110",
+    subDistrictCode = "100101",
+    subDistrictName = "Phra Borom Maha Ratchawang",
+    districtCode = "1001",
+    districtName = "Phra Nakhon",
+    provinceCode = "10",
+    provinceName = "Bangkok",
+    countryCode = "764",
+    countryName = "Thailand",
+    village = null,
+    building = null,
+    number = "123",
+    moo = null,
+    soi = null,
+    floor = null,
+    road = "Main Street",
+    room = null,
+    city = "Bangkok",
+    title = "Mr.",
+    personType = "individual",
+    isDefault = true
+)
+
+// Suspend
+val result = profileService.updateAddress(addressForm)
+
+// Callback
+profileService.updateAddress(addressForm) { result ->
+    when (result) {
+        is ProfileResult.SuccessUpdateAddress -> {
+            // Handle successful address update
+            val address = result.result
+            println("Address updated: ${address.addressName}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### deleteAddress
+
+Deletes a user address by key.
+
+- Request (caller-supplied)
+
+| Field Name | Description        | Mandatory | Data Type |
+|------------|--------------------|-----------|----------|
+| key        | Address unique key | M         | String   |
 
 - Response (`NoContentResponse`)
   HTTP status: 200
@@ -659,14 +1031,202 @@ No parameters required.
 
 ```kotlin
 // Suspend
-val result = profileService.deleteAccount()
+val result = profileService.deleteAddress("address_key_123")
 
 // Callback
-profileService.deleteAccount { result ->
+profileService.deleteAddress("address_key_123") { result ->
     when (result) {
-        is ProfileResult.SuccessDelete -> {
-            // Handle successful account deletion
-            println("Account deleted successfully")
+        is ProfileResult.SuccessDeleteAddress -> {
+            // Handle successful address deletion
+            println("Address deleted successfully")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getTaxAddressList
+
+Retrieves the list of user's saved tax addresses.
+
+- Request (caller-supplied)
+
+No parameters required.
+
+- Response (`List<Address>`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.getTaxAddressList()
+
+// Callback
+profileService.getTaxAddressList { result ->
+    when (result) {
+        is ProfileResult.SuccessTaxAddressList -> {
+            // Handle successful tax address list retrieval
+            val taxAddresses = result.result
+            taxAddresses.forEach { address ->
+                println("Tax Address: ${address.companyName} - ${address.taxId}")
+            }
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getTaxAddressDetail
+
+Retrieves detailed information for a specific tax address by key.
+
+- Request (caller-supplied)
+
+| Field Name | Description            | Mandatory | Data Type |
+|------------|------------------------|-----------|----------|
+| key        | Tax address unique key | M         | String   |
+
+- Response (`Address`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.getTaxAddressDetail("tax_address_key_456")
+
+// Callback
+profileService.getTaxAddressDetail("tax_address_key_456") { result ->
+    when (result) {
+        is ProfileResult.SuccessTaxAddressDetail -> {
+            // Handle successful tax address detail retrieval
+            val taxAddress = result.result
+            println("Company: ${taxAddress.companyName}")
+            println("Tax ID: ${taxAddress.taxId}")
+            println("Address: ${taxAddress.address}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### updateTaxAddress
+
+Creates a new tax address or updates an existing tax address.
+
+- Request (caller-supplied)
+
+| Field Name | Description      | Mandatory | Data Type   |
+|------------|------------------|-----------|-------------|
+| form       | Tax address form | M         | AddressForm |
+
+- Response (`Address`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Create tax address form
+val taxAddressForm = AddressForm(
+    key = null, // null for new tax address, provide key for update
+    name = null,
+    firstName = "John",
+    lastName = "Doe",
+    addressName = "Company Office",
+    contactNumber = "0212345678",
+    email = "accounting@company.com",
+    companyName = "ABC Company Ltd.",
+    taxId = "0123456789012",
+    address = "456 Business Street",
+    zipcode = "10110",
+    subDistrictCode = "100102",
+    subDistrictName = "Wang Burapha Phirom",
+    districtCode = "1001",
+    districtName = "Phra Nakhon",
+    provinceCode = "10",
+    provinceName = "Bangkok",
+    countryCode = "764",
+    countryName = "Thailand",
+    village = null,
+    building = "ABC Tower",
+    number = "456",
+    moo = null,
+    soi = null,
+    floor = "15",
+    road = "Business Street",
+    room = "1501",
+    city = "Bangkok",
+    title = "Ms.",
+    personType = "company",
+    isDefault = true
+)
+
+// Suspend
+val result = profileService.updateTaxAddress(taxAddressForm)
+
+// Callback
+profileService.updateTaxAddress(taxAddressForm) { result ->
+    when (result) {
+        is ProfileResult.SuccessUpdateTaxAddress -> {
+            // Handle successful tax address update
+            val taxAddress = result.result
+            println("Tax address updated: ${taxAddress.companyName}")
+        }
+        is ProfileResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### deleteTaxAddress
+
+Deletes a user tax address by key.
+
+- Request (caller-supplied)
+
+| Field Name | Description            | Mandatory | Data Type |
+|------------|------------------------|-----------|----------|
+| key        | Tax address unique key | M         | String   |
+
+- Response (`NoContentResponse`)
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = profileService.deleteTaxAddress("tax_address_key_456")
+
+// Callback
+profileService.deleteTaxAddress("tax_address_key_456") { result ->
+    when (result) {
+        is ProfileResult.SuccessDeleteTaxAddress -> {
+            // Handle successful tax address deletion
+            println("Tax address deleted successfully")
         }
         is ProfileResult.Error -> {
             // Handle error
@@ -682,7 +1242,39 @@ profileService.deleteAccount { result ->
 ## Summary
 
 The ProfileUseCase provides comprehensive user profile management functionality within the Buzzebees
-SDK. It offers methods to retrieve and update user profiles, manage shipping information, change
-passwords and contact numbers, track point balances and expiring points, and delete user accounts.
-The UseCase supports both basic profile operations and advanced features like image upload and OTP
-verification for sensitive operations.
+SDK. It offers methods to retrieve and update user profiles, manage language and notification settings,
+manage shipping information, change passwords and contact numbers, track point balances and expiring points,
+manage user addresses (both regular and tax addresses), and delete user accounts. The UseCase supports both
+basic profile operations and advanced features like image upload, OTP verification for sensitive operations,
+and comprehensive address management for delivery and tax purposes.
+
+The ProfileUseCase includes **17 methods** covering:
+
+**Core Profile Operations (7 methods)**
+- `getProfile()` - Retrieve complete user profile
+- `updateProfile()` - Update profile with optional image upload
+- `updateLanguage()` - Update user language preference
+- `updateNotification()` - Update notification settings
+- `changePassword()` - Change user password
+- `changeContactNumber()` - Change contact number with OTP verification
+- `deleteAccount()` - Delete user account
+
+**Points Management (2 methods)**
+- `getPoint()` - Get current point balance
+- `getExpirePoint()` - Get expiring points information
+
+**Shipping Operations (1 method)**
+- `updateShipping()` - Update shipping information
+
+**Address Management (8 methods)**
+- `getAddressList()` - Get list of saved addresses
+- `getAddressDetail()` - Get specific address details
+- `updateAddress()` - Create or update address
+- `deleteAddress()` - Delete address
+- `getTaxAddressList()` - Get list of saved tax addresses
+- `getTaxAddressDetail()` - Get specific tax address details
+- `updateTaxAddress()` - Create or update tax address
+- `deleteTaxAddress()` - Delete tax address
+
+All methods support both suspend functions and callback patterns for flexible integration with different
+architectural approaches and coroutine usage preferences.

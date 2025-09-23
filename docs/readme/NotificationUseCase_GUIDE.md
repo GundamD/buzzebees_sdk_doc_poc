@@ -12,6 +12,40 @@ val notificationService = BuzzebeesSDK.instance().notificationUseCase
 
 ---
 
+### getCacheNotificationList
+
+Retrieves cached notifications from local storage for offline access.
+
+- Request (caller-supplied)
+
+No parameters required.
+
+- Response (`List<Notification>`)
+  Returns cached notifications or empty list
+
+- Usage
+
+```kotlin
+// Synchronous call - no network request
+val cachedNotifications = notificationService.getCacheNotificationList()
+
+if (cachedNotifications.isNotEmpty()) {
+    // Use cached data
+    cachedNotifications.forEach { notification ->
+        val objectType = notification.objectType
+        val isRead = notification.isRead
+        val createTime = notification.createTime
+        
+        println("Cached Notification: $objectType, Read: $isRead")
+    }
+} else {
+    // No cached data available - consider calling getNotificationList()
+    println("No cached notifications available")
+}
+```
+
+---
+
 ### getNotificationList
 
 Retrieves a list of notifications with pagination and sorting options.
@@ -24,15 +58,7 @@ Retrieves a list of notifications with pagination and sorting options.
 | top        | Maximum number of records to return  | O         | Int?      |
 | sortBy     | Sort field and direction             | O         | String?   |
 
-#### sortBy Options
-
-| Value             | Description                        |
-|-------------------|------------------------------------|
-| createdate_asc    | Sort by creation date (oldest first) |
-| createdate_desc   | Sort by creation date (newest first) |
-
 - Response (`List<Notification>`)
-  HTTP status: 200
 
 ### Notification Entity Fields
 
@@ -86,6 +112,61 @@ notificationService.getNotificationList(
             // Handle error
             val errorCode = result.error.code
             val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+---
+
+### getNotificationCount
+
+Retrieves the total count of user notifications for badge display and management.
+
+- Request (caller-supplied)
+
+No parameters required.
+
+- Response (`Int`) - Total notification count
+  HTTP status: 200
+
+- Usage
+
+```kotlin
+// Suspend
+val result = notificationService.getNotificationCount()
+
+// Callback
+notificationService.getNotificationCount { result ->
+    when (result) {
+        is NotificationResult.SuccessCount -> {
+            // Handle successful notification count retrieval
+            val notificationCount = result.count
+            
+            println("Total notifications: $notificationCount")
+            
+            // Update badge or UI element
+            if (notificationCount > 0) {
+                // Show badge with count
+                updateNotificationBadge(notificationCount)
+            } else {
+                // Hide badge
+                hideNotificationBadge()
+            }
+        }
+        is NotificationResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+            
+            when (errorCode) {
+                "NO_NOTIFICATIONS" -> {
+                    // Handle no notifications case
+                }
+                "AUTHENTICATION_REQUIRED" -> {
+                    // Handle authentication required
+                }
+            }
         }
     }
 }

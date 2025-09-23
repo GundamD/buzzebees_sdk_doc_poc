@@ -9,7 +9,8 @@ The Buzzebees SDK provides core functionalities for your Android application, in
 This version of the Buzzebees SDK includes enhanced features not found in the standard documentation:
 
 - ⭐ **Custom API Integration**: Create your own API services using SDK's pre-configured HTTP infrastructure
-- 🔗 **URL Builder Extensions**: Convenient URL building for campaigns, profiles, and redemptions  
+- 🔗 **URL Builder Extensions**: Convenient URL building for campaigns, profiles, and redemptions
+- 🔒 **Debug Security**: Automatic debug logging control for production safety ⭐ **NEW**
 - 📋 **Comprehensive Documentation**: Detailed guides with real-world examples and best practices
 - ⚙️ **Advanced Configuration**: Support for custom interceptors, base URLs, and converter factories
 - 🛠️ **Production-Ready Examples**: Complete integration patterns for various architectural approaches
@@ -144,8 +145,8 @@ val paymentApi = BuzzebeesSDK.instance().customApiBuilder()
 
 The Buzzebees SDK provides `BuzzebeesSDKImageHeaders` for automatic authentication when loading images from Buzzebees API. Supports popular image loading libraries and manual loading.
 
-| Component                    | Description                                                                                  | Guide Link                                     |
-|------------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------|
+| Component                    | Description                                                                                  | Guide Link                              |
+|------------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------|
 | **Image Loading Guide**      | Complete guide for loading Buzzebees images with authentication using Coil, Glide, Picasso | [source](readme/IMAGE_LOADING_GUIDE.md) |
 
 #### Quick Start - Image Loading
@@ -169,10 +170,11 @@ val profileUrl = BuzzebeesSDK.instance().buildProfileImageUrl("BZD_00001280200")
 imageView.load(profileUrl)
 
 // 2. Without external library
-val client = OkHttpClient.Builder()
-    .addInterceptor(BuzzebeesSDKImageHeaders.createInterceptor())
-    .build()
-// Use with your custom image loading solution
+imageView.loadBuzzebeesProfile(
+    userId = "BZD_00001280200",
+    placeholderRes = R.drawable.placeholder,
+    errorRes = R.drawable.error
+)
 ```
 
 ### 2.25 Error Handling System
@@ -467,6 +469,13 @@ lifecycleScope.launch {
 
 ## 4. Best Practices
 
+### Security Best Practices
+
+- **Debug Logging**: SDK automatically disables all debug logging in production builds
+- **Custom APIs**: Inherit the same security behavior as core SDK APIs
+- **Build Verification**: Debug mode is controlled by `configs.isDebugMode` automatically
+- **Zero Configuration**: No manual setup required - security is handled by the SDK
+
 ### Lifecycle Management
 
 - Always pair `registerBadgeListener()` with `unregisterBadgeListener()`
@@ -484,6 +493,53 @@ lifecycleScope.launch {
 - Avoid strong references to Activities/Fragments in long-lived objects
 - Use WeakReference if you must hold references to UI components
 - Always clean up listeners in appropriate lifecycle callbacks
+
+---
+
+## 4.1. Debug vs Production Configuration ⭐ **NEW**
+
+The Buzzebees SDK automatically adjusts its logging behavior based on the debug mode configuration for maximum security.
+
+### Debug Mode Behavior
+
+**Debug Builds** (`configs.isDebugMode = true`):
+- ✅ HTTP request/response logging enabled
+- ✅ cURL command logging for debugging
+- ✅ Full network inspection capabilities
+
+**Production Builds** (`configs.isDebugMode = false`):
+- 🔒 **NO HTTP logging** - protects sensitive data
+- 🔒 **NO cURL logging** - prevents request exposure
+- 🔒 **NO debug interceptors** - maximum performance
+
+### Security Benefits
+
+```kotlin
+// Debug Build - Full logging for development
+val api = BuzzebeesSDK.instance().createCustomApiService(MyApi::class.java)
+// Automatically includes HTTP/cURL logging for debugging
+
+// Production Build - Zero logging for security
+val api = BuzzebeesSDK.instance().createCustomApiService(MyApi::class.java)
+// No sensitive data logging - production safe
+```
+
+### Custom API Security
+
+Custom APIs created through the SDK automatically inherit the same secure behavior:
+
+```kotlin
+// This API respects debug mode settings automatically
+val customApi = BuzzebeesSDK.instance().customApiBuilder()
+    .baseUrl("https://api.example.com/")
+    .addInterceptor(MyInterceptor())
+    .build(MyApi::class.java)
+    
+// Debug: HTTP logging + your interceptor
+// Production: Only your interceptor, no SDK logging
+```
+
+> 🔒 **Production Safety**: The SDK ensures zero debug information leakage in production builds while maintaining full debugging capabilities during development.
 
 ---
 

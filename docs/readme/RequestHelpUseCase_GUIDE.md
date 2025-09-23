@@ -1,6 +1,9 @@
 ## RequestHelpUseCase Guide
 
-This guide shows how to initialize and use every public method in `RequestHelpUseCase`, with suspend and callback examples where available. The RequestHelpUseCase provides comprehensive help and support functionality for managing user help requests, comments, and forum-style interactions within the Buzzebees ecosystem.
+This guide shows how to initialize and use every public method in `RequestHelpUseCase`, with suspend
+and callback examples where available. The RequestHelpUseCase provides comprehensive help forum functionality
+for posting help requests, viewing help listings, commenting on posts, and managing likes/unlikes
+for community support features.
 
 ### Getting an instance
 
@@ -12,22 +15,20 @@ val requestHelpService = BuzzebeesSDK.instance().requestHelpUseCase
 
 ### getHelpCode
 
-Retrieves a help code that can be used to create new help requests. This code is required for the postHelp method.
+Retrieves a help request code for creating new help requests.
 
 - Request (caller-supplied)
 
-| Field Name    | Description                | Mandatory | Data Type |
-|---------------|----------------------------|-----------|-----------|
-| -          | None. SDK supplies device/app info automatically. | -         | -         |
+No parameters required.
 
 - Response (`RequestHelpCode`)
   HTTP status: 200
 
 ### RequestHelpCode Entity Fields
 
-| Field Name | Description       | Data Type | JSON Field |
-|------------|-------------------|-----------|------------|
-| code       | Help request code | String?   | code       |
+| Field Name | Description           | Data Type | JSON Field |
+|------------|-----------------------|-----------|------------|
+| code       | Help request code     | String?   | code       |
 
 - Usage
 
@@ -36,16 +37,17 @@ Retrieves a help code that can be used to create new help requests. This code is
 val result = requestHelpService.getHelpCode()
 
 // Callback
-requestHelpService.getHelpCode() { result ->
+requestHelpService.getHelpCode { result ->
     when (result) {
         is RequestHelpResult.SuccessHelpCode -> {
             // Handle successful help code retrieval
-            val helpCode = result.result.code
-            println("Help Code: $helpCode")
+            val helpCode = result.result
+            println("Help code: ${helpCode.code}")
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -55,62 +57,62 @@ requestHelpService.getHelpCode() { result ->
 
 ### getHelpList
 
-Retrieves a paginated list of help requests for a specific request ID.
+Retrieves a paginated list of help requests.
 
 - Request (caller-supplied)
 
-| Field Name | Description                    | Mandatory | Data Type |
-|------------|--------------------------------|-----------|-----------|
-| requestId  | Request identifier             | M         | String    |
-| lastRowKey | Key for pagination (next page) | O         | String?   |
+| Field Name | Description                      | Mandatory | Data Type |
+|------------|----------------------------------|-----------|-----------|
+| requestId  | Help request ID or category code | M         | String    |
+| lastRowKey | Row key for pagination           | O         | String?   |
 
 - Response (`List<RequestHelp>`)
   HTTP status: 200
 
 ### RequestHelp Entity Fields
 
-| Field Name   | Description            | Data Type | JSON Field   |
-|--------------|------------------------|-----------|--------------|
-| userId       | User identifier        | String?   | UserId       |
-| name         | User name              | String?   | Name         |
-| message      | Help message content   | String?   | Message      |
-| imageUrl     | Image URL if attached  | String?   | ImageUrl     |
-| width        | Image width            | Int?      | Width        |
-| height       | Image height           | Int?      | Height       |
-| photoId      | Photo identifier       | String?   | PhotoId      |
-| type         | Request type           | String?   | Type         |
-| agencyId     | Agency identifier      | String?   | AgencyId     |
-| agencyName   | Agency name            | String?   | AgencyName   |
-| likes        | Number of likes        | Int?      | Likes        |
-| isLiked      | Whether user liked it  | Boolean?  | IsLiked      |
-| commentCount | Number of comments     | Int?      | CommentCount |
-| createdTime  | Creation timestamp     | Int?      | CreatedTime  |
-| buzzKey      | Unique identifier      | String?   | BuzzKey      |
-| campaignId   | Campaign identifier    | String?   | CampaignId   |
-| partitionKey | Database partition key | String?   | PartitionKey |
-| rowKey       | Database row key       | String?   | RowKey       |
+| Field Name   | Description                 | Data Type | JSON Field   |
+|--------------|----------------------------|-----------|--------------|
+| userId       | User ID of poster          | String?   | UserId       |
+| name         | Name of poster             | String?   | Name         |
+| message      | Help request message       | String?   | Message      |
+| imageUrl     | Attached image URL         | String?   | ImageUrl     |
+| width        | Image width                | Int?      | Width        |
+| height       | Image height               | Int?      | Height       |
+| photoId      | Photo identifier           | String?   | PhotoId      |
+| type         | Request type               | String?   | Type         |
+| agencyId     | Agency identifier          | String?   | AgencyId     |
+| agencyName   | Agency name                | String?   | AgencyName   |
+| likes        | Number of likes            | Int?      | Likes        |
+| isLiked      | Current user liked flag    | Boolean?  | IsLiked      |
+| commentCount | Number of comments         | Int?      | CommentCount |
+| createdTime  | Creation timestamp         | Int?      | CreatedTime  |
+| buzzKey      | Unique buzz key            | String?   | BuzzKey      |
+| campaignId   | Related campaign ID        | String?   | CampaignId   |
+| partitionKey | Database partition key     | String?   | PartitionKey |
+| rowKey       | Database row key           | String?   | RowKey       |
 
 - Usage
 
 ```kotlin
 // Suspend
-val result = requestHelpService.getHelpList("request_123", null)
+val result = requestHelpService.getHelpList("HELP_GENERAL", null)
 
 // Callback
-requestHelpService.getHelpList("request_123", null) { result ->
+requestHelpService.getHelpList("HELP_GENERAL", null) { result ->
     when (result) {
         is RequestHelpResult.SuccessHelpList -> {
             // Handle successful help list retrieval
-            val helpList = result.result
-            helpList.forEach { helpItem ->
-                println("Help: ${helpItem.message}")
-                println("User: ${helpItem.name}")
-                println("Likes: ${helpItem.likes}")
+            val helpRequests = result.result
+            helpRequests.forEach { helpRequest ->
+                println("Help: ${helpRequest.name} - ${helpRequest.message}")
+                println("Likes: ${helpRequest.likes}, Comments: ${helpRequest.commentCount}")
             }
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -120,13 +122,13 @@ requestHelpService.getHelpList("request_123", null) { result ->
 
 ### getHelpDetail
 
-Retrieves detailed information for a specific help request using its buzz key.
+Retrieves detailed information for a specific help request.
 
 - Request (caller-supplied)
 
-| Field Name | Description            | Mandatory | Data Type |
-|------------|------------------------|-----------|-----------|
-| buzzKey    | Unique help identifier | M         | String    |
+| Field Name | Description      | Mandatory | Data Type |
+|------------|------------------|-----------|-----------|
+| buzzKey    | Help request key | M         | String    |
 
 - Response (`RequestHelp`)
   HTTP status: 200
@@ -135,21 +137,22 @@ Retrieves detailed information for a specific help request using its buzz key.
 
 ```kotlin
 // Suspend
-val result = requestHelpService.getHelpDetail("buzz_key_123")
+val result = requestHelpService.getHelpDetail("help_buzz_key_123")
 
 // Callback
-requestHelpService.getHelpDetail("buzz_key_123") { result ->
+requestHelpService.getHelpDetail("help_buzz_key_123") { result ->
     when (result) {
         is RequestHelpResult.SuccessHelpDetail -> {
             // Handle successful help detail retrieval
             val helpDetail = result.result
+            println("Help from: ${helpDetail.name}")
             println("Message: ${helpDetail.message}")
-            println("User: ${helpDetail.name}")
-            println("Likes: ${helpDetail.likes}")
+            println("Likes: ${helpDetail.likes}, Comments: ${helpDetail.commentCount}")
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -159,15 +162,15 @@ requestHelpService.getHelpDetail("buzz_key_123") { result ->
 
 ### postHelp
 
-Creates a new help request with optional image attachment.
+Posts a new help request with optional image attachment.
 
 - Request (caller-supplied)
 
-| Field Name | Description                         | Mandatory | Data Type |
-|------------|-------------------------------------|-----------|-----------|
-| requestId  | Request identifier from getHelpCode | M         | String    |
-| message    | Help message content                | M         | String    |
-| image      | Optional image file attachment      | O         | File?     |
+| Field Name | Description             | Mandatory | Data Type |
+|------------|-------------------------|-----------|-----------|
+| requestId  | Help request ID/code    | M         | String    |
+| message    | Help request message    | M         | String    |
+| image      | Optional image file     | O         | File?     |
 
 - Response (`RequestHelp`)
   HTTP status: 200
@@ -175,30 +178,30 @@ Creates a new help request with optional image attachment.
 - Usage
 
 ```kotlin
-import java.io.File
-
-// Suspend - With image
-val imageFile = File("/path/to/screenshot.jpg")
+// Suspend
 val result = requestHelpService.postHelp(
-    requestId = "request_code_123",
-    message = "I need help with my account",
-    image = imageFile
+    requestId = "HELP_CODE_123",
+    message = "I need help with account login issues",
+    image = File("/path/to/screenshot.jpg")
 )
 
 // Callback
-val imageFile = File("/path/to/error_screenshot.png")
-requestHelpService.postHelp("request_code_123", "Need help", imageFile) { result ->
+requestHelpService.postHelp(
+    requestId = "HELP_CODE_123",
+    message = "I need help with account login issues",
+    image = null
+) { result ->
     when (result) {
         is RequestHelpResult.SuccessPostHelp -> {
             // Handle successful help post
             val postedHelp = result.result
-            println("Help posted: ${postedHelp.message}")
-            println("Buzz Key: ${postedHelp.buzzKey}")
-            println("Image URL: ${postedHelp.imageUrl}")
+            println("Help posted successfully!")
+            println("Buzz key: ${postedHelp.buzzKey}")
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -212,57 +215,58 @@ Retrieves a paginated list of comments for a specific help request.
 
 - Request (caller-supplied)
 
-| Field Name | Description                    | Mandatory | Data Type |
-|------------|--------------------------------|-----------|-----------|
-| buzzKey    | Help request identifier        | M         | String    |
-| lastRowKey | Key for pagination (next page) | O         | String?   |
+| Field Name | Description             | Mandatory | Data Type |
+|------------|-------------------------|-----------|-----------|
+| buzzKey    | Help request key        | M         | String    |
+| lastRowKey | Row key for pagination  | O         | String?   |
 
 - Response (`List<Comment>`)
   HTTP status: 200
 
 ### Comment Entity Fields
 
-| Field Name   | Description            | Data Type | JSON Field   |
-|--------------|------------------------|-----------|--------------|
-| userId       | User identifier        | String?   | UserId       |
-| name         | User name              | String?   | Name         |
-| message      | Comment content        | String?   | Message      |
-| imageUrl     | Image URL if attached  | String?   | ImageUrl     |
-| width        | Image width            | Int?      | Width        |
-| height       | Image height           | Int?      | Height       |
-| photoId      | Photo identifier       | String?   | PhotoId      |
-| type         | Comment type           | String?   | Type         |
-| agencyId     | Agency identifier      | String?   | AgencyId     |
-| agencyName   | Agency name            | String?   | AgencyName   |
-| likes        | Number of likes        | Int?      | Likes        |
-| isLiked      | Whether user liked it  | Boolean?  | IsLiked      |
-| commentCount | Number of replies      | Int?      | CommentCount |
-| createdTime  | Creation timestamp     | Int?      | CreatedTime  |
-| buzzKey      | Parent help identifier | String?   | BuzzKey      |
-| campaignId   | Campaign identifier    | String?   | CampaignId   |
-| partitionKey | Database partition key | String?   | PartitionKey |
-| rowKey       | Database row key       | String?   | RowKey       |
+| Field Name   | Description                 | Data Type | JSON Field   |
+|--------------|----------------------------|-----------|--------------|
+| userId       | User ID of commenter       | String?   | UserId       |
+| name         | Name of commenter          | String?   | Name         |
+| message      | Comment message            | String?   | Message      |
+| imageUrl     | Attached image URL         | String?   | ImageUrl     |
+| width        | Image width                | Int?      | Width        |
+| height       | Image height               | Int?      | Height       |
+| photoId      | Photo identifier           | String?   | PhotoId      |
+| type         | Comment type               | String?   | Type         |
+| agencyId     | Agency identifier          | String?   | AgencyId     |
+| agencyName   | Agency name                | String?   | AgencyName   |
+| likes        | Number of likes            | Int?      | Likes        |
+| isLiked      | Current user liked flag    | Boolean?  | IsLiked      |
+| commentCount | Number of replies          | Int?      | CommentCount |
+| createdTime  | Creation timestamp         | Int?      | CreatedTime  |
+| buzzKey      | Parent help request key    | String?   | BuzzKey      |
+| campaignId   | Related campaign ID        | String?   | CampaignId   |
+| partitionKey | Database partition key     | String?   | PartitionKey |
+| rowKey       | Database row key           | String?   | RowKey       |
 
 - Usage
 
 ```kotlin
 // Suspend
-val result = requestHelpService.getCommentList("buzz_key_123", null)
+val result = requestHelpService.getCommentList("help_buzz_key_123", null)
 
 // Callback
-requestHelpService.getCommentList("buzz_key_123", null) { result ->
+requestHelpService.getCommentList("help_buzz_key_123", null) { result ->
     when (result) {
         is RequestHelpResult.SuccessCommentList -> {
             // Handle successful comment list retrieval
             val comments = result.result
             comments.forEach { comment ->
-                println("${comment.name}: ${comment.message}")
-                println("Likes: ${comment.likes}")
+                println("Comment by: ${comment.name}")
+                println("Message: ${comment.message}")
             }
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -272,15 +276,15 @@ requestHelpService.getCommentList("buzz_key_123", null) { result ->
 
 ### postComment
 
-Adds a new comment to a help request with optional image attachment.
+Posts a comment on a help request with optional image attachment.
 
 - Request (caller-supplied)
 
-| Field Name | Description                    | Mandatory | Data Type |
-|------------|--------------------------------|-----------|-----------|
-| buzzKey    | Help request identifier        | M         | String    |
-| message    | Comment content                | M         | String    |
-| image      | Optional image file attachment | O         | File?     |
+| Field Name | Description         | Mandatory | Data Type |
+|------------|---------------------|-----------|-----------|
+| buzzKey    | Help request key    | M         | String    |
+| message    | Comment message     | M         | String    |
+| image      | Optional image file | O         | File?     |
 
 - Response (`Comment`)
   HTTP status: 200
@@ -288,29 +292,30 @@ Adds a new comment to a help request with optional image attachment.
 - Usage
 
 ```kotlin
-import java.io.File
-
-// Suspend - With image
-val imageFile = File("/path/to/solution_screenshot.jpg")
+// Suspend
 val result = requestHelpService.postComment(
-    buzzKey = "buzz_key_123",
-    message = "Here's what I did to fix it",
-    image = imageFile
+    buzzKey = "help_buzz_key_123",
+    message = "Try resetting your password from settings",
+    image = null
 )
 
 // Callback
-val screenshotFile = File("/path/to/helpful_screenshot.png")
-requestHelpService.postComment("buzz_key_123", "Thanks!", screenshotFile) { result ->
+requestHelpService.postComment(
+    buzzKey = "help_buzz_key_123",
+    message = "Try resetting your password from settings",
+    image = null
+) { result ->
     when (result) {
         is RequestHelpResult.SuccessPostComment -> {
             // Handle successful comment post
             val postedComment = result.result
-            println("Comment posted: ${postedComment.message}")
-            println("Image URL: ${postedComment.imageUrl}")
+            println("Comment posted successfully!")
+            println("Message: ${postedComment.message}")
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -318,41 +323,45 @@ requestHelpService.postComment("buzz_key_123", "Thanks!", screenshotFile) { resu
 
 ---
 
-### linkCampaign (Like)
+### linkCampaign
 
-Likes a help request or comment, showing appreciation for the content.
+Likes a help request (adds a like/thumbs up).
 
 - Request (caller-supplied)
 
-| Field Name | Description                | Mandatory | Data Type |
-|------------|----------------------------|-----------|-----------|
-| buzzKey    | Help or comment identifier | M         | String    |
+| Field Name | Description      | Mandatory | Data Type |
+|------------|------------------|-----------|-----------|
+| buzzKey    | Help request key | M         | String    |
 
-- Response (`LikeForumResponse`)  
+- Response (`LikeForumResponse`) 
   HTTP status: 200
 
 ### LikeForumResponse Entity Fields
 
-| Field Name | Description           | Data Type | JSON Field |
-|------------|-----------------------|-----------|------------|
-| result     | Like operation result | Boolean?  | result     |
+| Field Name | Description    | Data Type | JSON Field |
+|------------|----------------|-----------|------------|
+| result     | Like result    | Boolean?  | result     |
 
 - Usage
 
 ```kotlin
 // Suspend
-val result = requestHelpService.linkCampaign("buzz_key_123")
+val result = requestHelpService.linkCampaign("help_buzz_key_123")
 
 // Callback
-requestHelpService.linkCampaign("buzz_key_123") { result ->
+requestHelpService.linkCampaign("help_buzz_key_123") { result ->
     when (result) {
         is RequestHelpResult.SuccessLikeUnLike -> {
             // Handle successful like
-            println("Liked successfully!")
+            val likeResponse = result.result
+            if (likeResponse.result == true) {
+                println("Successfully liked the help request!")
+            }
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -360,15 +369,15 @@ requestHelpService.linkCampaign("buzz_key_123") { result ->
 
 ---
 
-### unLikeCampaign (Unlike)
+### unLikeCampaign
 
-Unlikes a previously liked help request or comment.
+Unlikes a help request (removes a like/thumbs up).
 
 - Request (caller-supplied)
 
-| Field Name | Description                | Mandatory | Data Type |
-|------------|----------------------------|-----------|-----------|
-| buzzKey    | Help or comment identifier | M         | String    |
+| Field Name | Description      | Mandatory | Data Type |
+|------------|------------------|-----------|-----------|
+| buzzKey    | Help request key | M         | String    |
 
 - Response (`LikeForumResponse`)
   HTTP status: 200
@@ -377,18 +386,22 @@ Unlikes a previously liked help request or comment.
 
 ```kotlin
 // Suspend
-val result = requestHelpService.unLikeCampaign("buzz_key_123")
+val result = requestHelpService.unLikeCampaign("help_buzz_key_123")
 
 // Callback
-requestHelpService.unLikeCampaign("buzz_key_123") { result ->
+requestHelpService.unLikeCampaign("help_buzz_key_123") { result ->
     when (result) {
         is RequestHelpResult.SuccessLikeUnLike -> {
             // Handle successful unlike
-            println("Unliked successfully!")
+            val unlikeResponse = result.result
+            if (unlikeResponse.result == true) {
+                println("Successfully unliked the help request!")
+            }
         }
         is RequestHelpResult.Error -> {
             // Handle error
-            println("Error: ${result.error.message}")
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
         }
     }
 }
@@ -398,15 +411,4 @@ requestHelpService.unLikeCampaign("buzz_key_123") { result ->
 
 ## Summary
 
-The RequestHelpUseCase provides help and support functionality within the Buzzebees SDK. It offers eight methods for managing help requests:
-
-- **getHelpCode**: Generate request codes for creating help requests
-- **getHelpList**: Retrieve paginated lists of help requests
-- **getHelpDetail**: Get detailed information for specific help requests
-- **postHelp**: Create new help requests with optional image attachments
-- **getCommentList**: Retrieve paginated comments for help requests
-- **postComment**: Add comments to help requests with optional image attachments
-- **linkCampaign**: Like help requests or comments
-- **unLikeCampaign**: Unlike help requests or comments
-
-Each method supports both suspend and callback patterns with comprehensive error handling.
+The RequestHelpUseCase provides comprehensive help forum functionality within the Buzzebees SDK. It enables users to create help requests, browse help listings, engage with community content through comments and likes, and manage forum interactions. The UseCase supports image attachments and pagination for efficient data loading.

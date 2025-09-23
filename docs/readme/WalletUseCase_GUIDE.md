@@ -20,7 +20,7 @@ Generates a time-sensitive stamp code that can be used for stamp collection acti
 |-------------|--------------------------------|-----------|-----------|
 | cardId      | Stamp card identifier          | M         | String    |
 
-- Response (`StampCode`
+- Response (`StampCode`)
   HTTP status: 200
 
 ### StampCode Entity Fields
