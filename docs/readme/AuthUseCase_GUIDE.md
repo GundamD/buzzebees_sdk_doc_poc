@@ -570,13 +570,40 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 
 ---
 
-### getOtp
+## OTP Channel Types
+
+The `channel` parameter in OTP methods specifies the purpose/context of the OTP request. Use these predefined values:
+
+| Channel Value      | Description                           | Use Case                          |
+|-------------------|---------------------------------------|-----------------------------------|
+| `"register"`       | User registration process             | New account creation              |
+| `"contact_number"` | Phone number verification/update      | Adding/updating phone number      |
+| `"email"`          | Email verification/update             | Adding/updating email address     |
+| `"forget_password"`| Password reset process                | Forgot password flow              |
+| `"login"`          | Login verification                    | Two-factor authentication         |
+
+### Kotlin OtpChannel Enum (Reference)
+
+```kotlin
+enum class OtpChannel(val value: String) {
+    REGISTER("register"),
+    CONTACT_NUMBER("contact_number"),
+    EMAIL("email"),
+    FORGET_PASSWORD("forget_password"),
+    LOGIN("login")
+}
+```
+
+---
+
+### getOtp (Phone Number OTP)
 
 - Request (caller-supplied)
 
-| Field Name    | Description          | Mandatory | Data Type |
-|---------------|----------------------|-----------|-----------|
-| contactNumber | Phone number (E.164) | M         | String    |
+| Field Name    | Description                    | Mandatory | Data Type |
+|---------------|--------------------------------|-----------|-----------|
+| contactNumber | Phone number (E.164)          | M         | String    |
+| channel       | OTP channel type (see above)  | M         | String    |
 
 - Response `OtpResponse`
   HTTP status: 200
@@ -588,10 +615,10 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 
 ```kotlin
 // Suspend
-val result = auth.getOtp("+66900000000")
+val result = auth.getOtp("+66900000000", "register")
 
 // Callback
-auth.getOtp("+66900000000") { result ->
+auth.getOtp("+66900000000", "register") { result ->
     when (result) {
         is AuthResult.SuccessGetOTP -> {
             // Handle successful OTP request
@@ -607,40 +634,128 @@ auth.getOtp("+66900000000") { result ->
 }
 ```
 
-#### Error Handling
+#### Channel Usage Examples
 
-| Error Code | Error ID | Scenario                | User Message                                               | Recommended Action                       |
-|------------|----------|-------------------------|------------------------------------------------------------|------------------------------------------|
-| 409        | 2078     | Mobile number duplicate | "This number is already in use. Please use another number" | Let user enter new number                |
-| 409        | 2092     | Invalid mobile format   | "Invalid phone number format"                              | Show correct format example (08XXXXXXXX) |
-| 429        | -        | Rate limit exceeded     | "OTP requested too frequently. Please wait 60 seconds"     | Show countdown timer                     |
-| 404        | -        | Mobile not found        | "Phone number not found in system"                         | Suggest user to register first           |
+```kotlin
+// For user registration
+auth.getOtp(contactNumber, "register") { result -> /* handle */ }
+
+// For phone number verification/update
+auth.getOtp(contactNumber, "contact_number") { result -> /* handle */ }
+
+// For password reset
+auth.getOtp(contactNumber, "forget_password") { result -> /* handle */ }
+
+// For login 2FA
+auth.getOtp(contactNumber, "login") { result -> /* handle */ }
+```
+
+---
+
+### getOtpEmail (Email OTP)
+
+- Request (caller-supplied)
+
+| Field Name | Description                   | Mandatory | Data Type |
+|------------|-------------------------------|-----------|-----------|
+| email      | Email address                 | M         | String    |
+| channel    | OTP channel type (see above)  | M         | String    |
+
+- Response `OtpResponse`
+  HTTP status: 200
+
+| Field Name | Description                     | Mandatory | Data Type |
+|------------|---------------------------------|-----------|-----------|
+| refcode    | Reference code for confirmation | O         | String    |
+| expiredate | Expiration time (epoch millis)  | O         | Long/Int  |
+
+```kotlin
+// Suspend
+val result = auth.getOtpEmail("user@example.com", "email")
+
+// Callback
+auth.getOtpEmail("user@example.com", "email") { result ->
+    when (result) {
+        is AuthResult.SuccessGetOTP -> {
+            // Handle successful email OTP request
+            val refCode = result.result.refcode
+            val expireDate = result.result.expiredate
+        }
+        is AuthResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+#### Channel Usage Examples
+
+```kotlin
+// For user registration
+auth.getOtpEmail(email, "register") { result -> /* handle */ }
+
+// For email verification/update
+auth.getOtpEmail(email, "email") { result -> /* handle */ }
+
+// For password reset
+auth.getOtpEmail(email, "forget_password") { result -> /* handle */ }
+
+// For login 2FA
+auth.getOtpEmail(email, "login") { result -> /* handle */ }
+```
+
+#### Error Handling (Both getOtp and getOtpEmail)
+
+| Error Code | Error ID | Scenario               | User Message                                            | Recommended Action                    |
+|------------|----------|------------------------|---------------------------------------------------------|---------------------------------------|
+| 409        | 2078     | Contact already in use | "This contact is already in use. Please use another"   | Let user enter new contact            |
+| 409        | 2092     | Invalid format         | "Invalid contact format"                                | Show correct format example           |
+| 429        | -        | Rate limit exceeded    | "OTP requested too frequently. Please wait 60 seconds" | Show countdown timer                  |
+| 404        | -        | Contact not found      | "Contact not found in system"                           | Suggest user to register first        |
 
 #### Implementation Example
 
 ```kotlin
-auth.getOtp(contactNumber) { result ->
+// Phone OTP
+auth.getOtp(contactNumber, "register") { result ->
     when (result) {
         is AuthResult.SuccessGetOTP -> {
-            // Handle successful OTP request
             startOtpTimer(result.result.expiredate)
         }
         is AuthResult.Error -> {
-            val action = when {
-                result.error.code == "409" && result.error.id == "2078" ->
-                    ErrorAction.ShowMobileDuplicateError()
-                result.error.code == "409" && result.error.id == "2092" ->
-                    ErrorAction.ShowMobileFormatError()
-                result.error.code == "429" ->
-                    ErrorAction.ShowRateLimitError(60) // 60 seconds
-                result.error.code == "404" ->
-                    ErrorAction.ShowMobileNotFoundError()
-                else ->
-                    ErrorAction.ShowGenericError(result.error.message)
-            }
-            handleErrorAction(action)
+            handleOtpError(result.error)
         }
     }
+}
+
+// Email OTP
+auth.getOtpEmail(email, "email") { result ->
+    when (result) {
+        is AuthResult.SuccessGetOTP -> {
+            startOtpTimer(result.result.expiredate)
+        }
+        is AuthResult.Error -> {
+            handleOtpError(result.error)
+        }
+    }
+}
+
+private fun handleOtpError(error: ErrorResponse) {
+    val action = when {
+        error.code == "409" && error.id == "2078" ->
+            ErrorAction.ShowContactDuplicateError()
+        error.code == "409" && error.id == "2092" ->
+            ErrorAction.ShowContactFormatError()
+        error.code == "429" ->
+            ErrorAction.ShowRateLimitError(60)
+        error.code == "404" ->
+            ErrorAction.ShowContactNotFoundError()
+        else ->
+            ErrorAction.ShowGenericError(error.message)
+    }
+    handleErrorAction(action)
 }
 ```
 
