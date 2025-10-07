@@ -226,7 +226,7 @@ campaignService.getCampaignList(campaignForm) { result ->
 
 ### getCampaignDetail
 
-Retrieves detailed information for a specific campaign.
+Retrieves detailed information for a specific campaign including automatic validation of campaign readiness status. The SDK automatically calculates the `readyToUse` field to determine if the campaign can be redeemed by checking authentication, expiration, quantity, and user eligibility conditions.
 
 - Request (caller-supplied)
 
@@ -365,18 +365,26 @@ Retrieves detailed information for a specific campaign.
 | message       | Status message (reason if not ready)  | String?   | message       |
 | code          | Status code identifier                | String?   | code          |
 
-**Important**: The `readyToUse` field is automatically calculated by the SDK when calling `getCampaignDetail`. It evaluates various conditions including user authentication status, campaign expiration, available quantity, and user eligibility to determine if the campaign is ready for redemption.
+**Campaign Readiness Validation**: The `readyToUse` field is automatically calculated by the SDK using server-side validation logic. It performs comprehensive checks in the following priority order:
 
-**Common Status Codes**:
+1. **Authentication Check** - Verifies user is properly authenticated (not device login)
+2. **Condition Pass Status** - When `isConditionPass = true`, validates:
+   - Campaign expiration using server time (prevents client manipulation)
+   - Available quantity (`qty > 0`)
+   - Item count vs quantity limits
+3. **Condition Alerts** - When `isConditionPass = false`, handles specific condition codes
+
+**ReadyToUse Status Codes**:
 - `"1"` - Campaign sold out
 - `"2"` - Max redemption per person reached
 - `"3"` - Campaign in cool down period
 - `"1403"` - Condition invalid
-- `"1406"` - Sponsor only campaign
+- `"1406"` - Sponsor only campaign  
 - `"1409"` - Campaign expired
 - `"1410"` - Campaign not started yet
 - `"1416"` - App version expired
 - `"1427"` - Privilege cannot be redeemed under specified terms
+- `null` with message - Authentication issues, custom conditions, or general errors
 
 - Usage
 
@@ -400,26 +408,69 @@ campaignService.getCampaignDetail("12345", 1054) { result ->
             val images = campaignDetail.pictures
             val styles = campaignDetail.subCampaignStyles
             
-            // Check campaign readiness status
+            // Handle campaign readiness status (IMPORTANT: Always check this)
             val readyStatus = campaignDetail.readyToUse
             val isReady = readyStatus.isReadyToUse
             val statusMessage = readyStatus.message
             val statusCode = readyStatus.code
             
             if (isReady == true) {
-                // Campaign is ready for redemption
-                showRedeemButton(true)
+                // ✅ Campaign is ready for redemption
+                showRedeemButton(enabled = true)
+                setupRedemptionFlow(campaignDetail)
             } else {
-                // Campaign is not ready - show reason
-                showStatusMessage(statusMessage)
-                showRedeemButton(false)
+                // ❌ Campaign is not ready - handle based on reason
+                showRedeemButton(enabled = false)
+                showStatusMessage(statusMessage ?: "Campaign not available")
                 
-                // Handle specific status codes
+                // Handle specific readyToUse conditions
                 when (statusCode) {
-                    "1" -> showSoldOutStatus()
-                    "1409" -> showExpiredStatus()
-                    "1410" -> showNotStartedStatus()
-                    else -> showGenericUnavailableStatus()
+                    "1" -> {
+                        // Sold out - suggest alternatives
+                        showSoldOutStatus()
+                        suggestSimilarCampaigns()
+                    }
+                    "2" -> {
+                        // Max per person reached - show limit info
+                        showMaxLimitReached()
+                        showRedemptionHistory()
+                    }
+                    "3" -> {
+                        // Cool down period - show next available time
+                        showCoolDownStatus(campaignDetail.nextRedeemDate)
+                    }
+                    "1409" -> {
+                        // Expired - show expiry info
+                        showExpiredStatus(campaignDetail.expireDate)
+                    }
+                    "1410" -> {
+                        // Not started - show start date
+                        showNotStartedStatus(campaignDetail.startDate)
+                    }
+                    "1406" -> {
+                        // Sponsor only - show upgrade option
+                        showSponsorOnlyStatus()
+                    }
+                    "1416" -> {
+                        // App version expired - redirect to update
+                        showAppUpdateRequired()
+                    }
+                    "1427" -> {
+                        // Terms violation - show terms
+                        showTermsViolation()
+                    }
+                    null -> {
+                        // Handle authentication or custom conditions
+                        if (statusMessage?.contains("authenticated", ignoreCase = true) == true) {
+                            showLoginRequired()
+                        } else {
+                            showGenericUnavailableStatus(statusMessage)
+                        }
+                    }
+                    else -> {
+                        // Unknown condition - show generic message
+                        showGenericUnavailableStatus(statusMessage)
+                    }
                 }
             }
         }
