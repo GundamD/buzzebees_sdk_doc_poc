@@ -56,7 +56,7 @@ Retrieves a list of notifications with pagination and sorting options.
 |------------|--------------------------------------|-----------|-----------|
 | skip       | Number of records to skip            | O         | Int?      |
 | top        | Maximum number of records to return  | O         | Int?      |
-| sortBy     | Sort field and direction             | O         | String?   |
+| sortBy     | Sort field and direction. Standard: createdate_desc (newest first), createdate_asc (oldest first). Custom options: updatedate_desc/asc, startdate_desc/asc | O         | String?   |
 
 - Response (`List<Notification>`)
 
@@ -76,21 +76,47 @@ Retrieves a list of notifications with pagination and sorting options.
 | imagePath               | Notification image path              | String?              | ImagePath            |
 | notificationRawObject   | Raw notification data                | Map<String, Any>?    | -                    |
 
+#### SortBy Parameter Options
+
+| Option           | Description                               | Example Usage     |
+|------------------|-------------------------------------------|-------------------|
+| createdate_desc  | Sort by creation date descending (default) | "createdate_desc" |
+| createdate_asc   | Sort by creation date ascending           | "createdate_asc"  |
+| updatedate_desc  | Sort by update date descending            | "updatedate_desc" |
+| updatedate_asc   | Sort by update date ascending             | "updatedate_asc"  |
+| startdate_desc   | Sort by start date descending             | "startdate_desc"  |
+| startdate_asc    | Sort by start date ascending              | "startdate_asc"   |
+
 - Usage
 
 ```kotlin
-// Suspend
-val result = notificationService.getNotificationList(
+// Suspend - with different sorting options
+// Get latest notifications first (default)
+val result1 = notificationService.getNotificationList(
     skip = 0,
     top = 20,
     sortBy = "createdate_desc"
 )
 
-// Callback
+// Get oldest notifications first
+val result2 = notificationService.getNotificationList(
+    skip = 0,
+    top = 10,
+    sortBy = "createdate_asc"
+)
+
+// Get notifications sorted by update date
+val result3 = notificationService.getNotificationList(
+    skip = 0,
+    top = 15,
+    sortBy = "updatedate_desc"
+)
+
+// Callback - using start date sorting
 notificationService.getNotificationList(
     skip = 0,
     top = 20,
-    sortBy = "createdate_desc"
+    sortBy = "startdate_desc"
 ) { result ->
     when (result) {
         is NotificationResult.SuccessList -> {
