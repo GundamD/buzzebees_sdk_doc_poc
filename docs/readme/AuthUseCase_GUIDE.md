@@ -974,6 +974,166 @@ auth.checkVersion { result ->
 
 ---
 
+### validateOtp (Validate OTP for phone number)
+
+- Request (caller-supplied)
+
+| Field Name    | Description                   | Mandatory | Data Type |
+|---------------|-------------------------------|-----------|----------|
+| otp           | One-time password             | M         | String   |
+| refCode       | Ref code from getOtp          | M         | String   |
+| contactNumber | Phone number (E.164)          | M         | String   |
+| use           | Use OTP immediately           | M         | Boolean  |
+| channel       | OTP channel type (see above)  | O         | String   |
+
+- Response `ValidateOtpResponse`
+  HTTP status: 200
+
+| Field Name   | Description           | Mandatory | Data Type |
+|--------------|----------------------- |-----------|----------|
+| validatecode | Validation code/token | O         | String   |
+
+```kotlin
+// Suspend
+val result = auth.validateOtp(
+    otp = "123456",
+    refCode = "REFCODE",
+    contactNumber = "+66900000000",
+    use = true,
+    channel = "register"
+)
+
+// Callback
+auth.validateOtp(
+    otp = "123456",
+    refCode = "REFCODE",
+    contactNumber = "+66900000000",
+    use = true,
+    channel = "register"
+) { result ->
+    when (result) {
+        is AuthResult.SuccessValidateOTP -> {
+            // Handle successful OTP validation
+            val validateCode = result.result.validatecode
+        }
+        is AuthResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+#### Difference from confirmOtp
+
+- **validateOtp**: Validates OTP without automatically logging in. Returns validation status.
+- **confirmOtp**: Validates OTP AND logs in the user. Returns auth token.
+
+Use `validateOtp` when you need to verify OTP separately from login, and `confirmOtp` for immediate authentication.
+
+#### Error Handling
+
+| Error Code | Error ID | Scenario          | User Message                               | Recommended Action                                       |
+|------------|----------|-------------------|--------------------------------------------|----------------------------------------------------------|
+| 409        | 2091     | Invalid OTP       | "Invalid OTP code"                         | Let user enter OTP again, show "Request new code" button |
+| 409        | 2092     | OTP expired       | "OTP code expired"                         | Resend OTP automatically                                 |
+| 429        | -        | Too many attempts | "Too many attempts. Please wait 5 minutes" | Lock input and show countdown                            |
+
+---
+
+### validateOtpEmail (Validate OTP for email)
+
+- Request (caller-supplied)
+
+| Field Name | Description                   | Mandatory | Data Type |
+|------------|-------------------------------|-----------|----------|
+| otp        | One-time password             | M         | String   |
+| refCode    | Ref code from getOtpEmail     | M         | String   |
+| email      | Email address                 | M         | String   |
+| use        | Use OTP immediately           | M         | Boolean  |
+| channel    | OTP channel type (see above)  | O         | String   |
+
+- Response `ValidateOtpResponse`
+  HTTP status: 200
+
+| Field Name   | Description           | Mandatory | Data Type |
+|--------------|----------------------- |-----------|----------|
+| validatecode | Validation code/token | O         | String   |
+
+```kotlin
+// Suspend
+val result = auth.validateOtpEmail(
+    otp = "123456",
+    refCode = "REFCODE",
+    email = "user@example.com",
+    use = true,
+    channel = "email"
+)
+
+// Callback
+auth.validateOtpEmail(
+    otp = "123456",
+    refCode = "REFCODE",
+    email = "user@example.com",
+    use = true,
+    channel = "email"
+) { result ->
+    when (result) {
+        is AuthResult.SuccessValidateOTP -> {
+            // Handle successful email OTP validation
+            val validateCode = result.result.validatecode
+        }
+        is AuthResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+#### Difference from confirmOtp
+
+- **validateOtpEmail**: Validates email OTP without automatically logging in.
+- **confirmOtp**: Uses phone number validation for login (returns auth token).
+
+Use `validateOtpEmail` for email verification flows, and `confirmOtp` for phone-based login.
+
+#### Error Handling
+
+Same as `validateOtp` above.
+
+#### Implementation Example
+
+```kotlin
+// Email verification flow
+auth.validateOtpEmail(otp, refCode, email, use = true, "email") { result ->
+    when (result) {
+        is AuthResult.SuccessValidateOTP -> {
+            // Email verified successfully
+            val validateCode = result.result.validatecode
+            navigateToNextStep()
+        }
+        is AuthResult.Error -> {
+            val action = when {
+                result.error.code == "409" && result.error.id == "2091" ->
+                    ErrorAction.ShowInvalidOtpError()
+                result.error.code == "409" && result.error.id == "2092" ->
+                    ErrorAction.ResendOtpAutomatically()
+                result.error.code == "429" ->
+                    ErrorAction.LockOtpInput(300) // 5 minutes
+                else ->
+                    ErrorAction.ShowGenericError(result.error.message)
+            }
+            handleErrorAction(action)
+        }
+    }
+}
+```
+
+---
+
 ### fraud (device risk check)
 
 - Request (caller-supplied)
