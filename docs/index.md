@@ -87,6 +87,25 @@ dependencies {
 
 ## 2. Buzzebees API integration
 
+### Campaign Types Reference
+
+The SDK supports the following campaign types:
+
+| Type | Constant Name | Description |
+|------|---------------|-------------|
+| 0 | CAMPAIGN_TYPE_DRAW | Draw/Lottery campaign |
+| 1 | CAMPAIGN_TYPE_FREE | Free campaign |
+| 2 | CAMPAIGN_TYPE_DEAL | Deal campaign |
+| 3 | CAMPAIGN_TYPE_BUY | Shopping/Purchase campaign |
+| 8 | CAMPAIGN_TYPE_INTERFACE | Interface campaign |
+| 9 | CAMPAIGN_TYPE_EVENT | Event campaign |
+| 10 | CAMPAIGN_TYPE_MEDIA | Media campaign |
+| 16 | CAMPAIGN_TYPE_NEW | New campaign |
+| 20 | CAMPAIGN_TYPE_DONATE | Donation campaign |
+| 33 | CAMPAIGN_TYPE_MARKETPLACE_PRIVILEGE | Marketplace privilege |
+
+### UseCase Guides
+
 | No.   | UseCase Name               | Guide Link                                          |
 |-------|----------------------------|-----------------------------------------------------|
 | 2.1   | Address UseCase            | [source](readme/AddressUseCase_GUIDE.md)            |
@@ -95,7 +114,8 @@ dependencies {
 | 2.3.1 | Auth Provider              | [source](readme/auth_provider_guide.md)             |
 | 2.4   | Badge UseCase              | [source](readme/BadgeUseCase_GUIDE.md)              |
 | 2.5   | Campaign UseCase           | [source](readme/CampaignUseCase_GUIDE.md)           |
-| 2.5.1 | Campaign Handling & Validation | [source](readme/CampaignHandling_GUIDE.md)     |
+| 2.5.1 | Campaign Detail UseCase    | [source](readme/CampaignDetailUseCase_GUIDE.md)     |
+| 2.5.2 | Campaign Handling & Validation | [source](readme/CampaignHandling_GUIDE.md)     |
 | 2.6   | Cart UseCase               | [source](readme/CartUseCase_GUIDE.md)               |
 | 2.7   | Category UseCase           | [source](readme/CategoryUseCase_GUIDE.md)           |
 | 2.8   | Consent UseCase            | [source](readme/ConsentUseCase_GUIDE.md)            |
@@ -104,17 +124,18 @@ dependencies {
 | 2.11  | History UseCase            | [source](readme/HistoryUseCase_GUIDE.md)            |
 | 2.12  | Maintenance UseCase        | [source](readme/MaintenanceUseCase_GUIDE.md)        |
 | 2.13  | Notification UseCase       | [source](readme/NotificationUseCase_GUIDE.md)       |
-| 2.14  | Place UseCase              | [source](readme/PlaceUseCase_GUIDE.md)              |
-| 2.15  | PointLog UseCase           | [source](readme/PointLogUseCase_GUIDE.md)           |
-| 2.16  | Profile UseCase            | [source](readme/ProfileUseCase_GUIDE.md)            |
-| 2.17  | Register UseCase           | [source](readme/RegisterUseCase_GUIDE.md)           |
-| 2.18  | RequestHelp UseCase        | [source](readme/RequestHelpUseCase_GUIDE.md)        |
-| 2.19  | Stamp UseCase              | [source](readme/StampUseCase_GUIDE.md)              |
-| 2.20  | UserLevel UseCase          | [source](readme/UserLevelUseCase_GUIDE.md)          |
-| 2.21  | Wallet UseCase             | [source](readme/WalletUseCase_GUIDE.md)             |
-| 2.22  | ZipCode UseCase            | [source](readme/ZipCodeUseCase_GUIDE.md)            |
+| 2.14  | OTP UseCase                | [source](readme/OTPUseCase_GUIDE.md)                |
+| 2.15  | Place UseCase              | [source](readme/PlaceUseCase_GUIDE.md)              |
+| 2.16  | PointLog UseCase           | [source](readme/PointLogUseCase_GUIDE.md)           |
+| 2.17  | Profile UseCase            | [source](readme/ProfileUseCase_GUIDE.md)            |
+| 2.18  | Register UseCase           | [source](readme/RegisterUseCase_GUIDE.md)           |
+| 2.19  | RequestHelp UseCase        | [source](readme/RequestHelpUseCase_GUIDE.md)        |
+| 2.20  | Stamp UseCase              | [source](readme/StampUseCase_GUIDE.md)              |
+| 2.21  | UserLevel UseCase          | [source](readme/UserLevelUseCase_GUIDE.md)          |
+| 2.22  | Wallet UseCase             | [source](readme/WalletUseCase_GUIDE.md)             |
+| 2.23  | ZipCode UseCase            | [source](readme/ZipCodeUseCase_GUIDE.md)            |
 
-### 2.23 Custom API Integration ⭐ **NEW**
+### 2.24 Custom API Integration ⭐ **NEW**
 
 The Buzzebees SDK now allows users to create custom API services while leveraging the SDK's pre-configured OkHttp and Retrofit setup, including authentication, interceptors, timeouts, and other optimizations.
 
@@ -141,7 +162,7 @@ val paymentApi = BuzzebeesSDK.instance().customApiBuilder()
     .build(PaymentApi::class.java)
 ```
 
-### 2.24 Image Loading with Authentication ⭐ **NEW**
+### 2.25 Image Loading with Authentication ⭐ **NEW**
 
 The Buzzebees SDK provides `BuzzebeesSDKImageHeaders` for automatic authentication when loading images from Buzzebees API. Supports popular image loading libraries and manual loading.
 
@@ -177,7 +198,7 @@ imageView.loadBuzzebeesProfile(
 )
 ```
 
-### 2.25 Error Handling System
+### 2.26 Error Handling System
 
 The Buzzebees SDK includes comprehensive error handling documentation to help developers create
 production-ready applications with excellent user experience.

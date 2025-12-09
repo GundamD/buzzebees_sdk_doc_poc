@@ -36,7 +36,7 @@ val auth = BuzzebeesSDK.instance().auth
 | locale                          | Language code (e.g., 1054/1033) | O         | Int                  |
 | userLevel                       | User level                      | O         | Int                  |
 | userLevelDetail                 | Level detail                    | O         | String               |
-| userFlags                       | User flags                      | O         | Array<`String`>        |
+| userFlags                       | User flags                      | O         | Array<`String`>      |
 | sponsorId                       | Sponsor id                      | O         | Int                  |
 | canRedeem                       | Redeem eligibility              | O         | Boolean              |
 | uuid                            | Device/user uuid                | O         | String               |
@@ -46,7 +46,7 @@ val auth = BuzzebeesSDK.instance().auth
 | detail.ewalletToken             | E-Wallet token                  | O         | String               |
 | cartCount                       | Cart items count                | O         | Int                  |
 | platform                        | Platform name                   | O         | String               |
-| topics                          | Topics subscribed               | O         | Array<`String`>        |
+| topics                          | Topics subscribed               | O         | Array<`String`>      |
 | channel                         | Channel (device/facebook/web)   | O         | String               |
 | TermAndCondition                | Terms & Conditions consent      | O         | Int                  |
 | DataPrivacy                     | Data Privacy consent            | O         | Int                  |
@@ -490,6 +490,215 @@ auth.logout { result ->
 
 ---
 
+### register
+
+Register a new user account.
+
+- Request (caller-supplied via `RegisterForm`)
+
+| Field Name                 | Description                       | Mandatory | Data Type          |
+|----------------------------|-----------------------------------|-----------|--------------------|
+| username                   | Username for the account          | M         | String             |
+| password                   | Password                          | M         | String             |
+| confirmPassword            | Password confirmation             | M         | String             |
+| firstname                  | First name                        | O         | String?            |
+| lastname                   | Last name                         | O         | String?            |
+| address                    | Address                           | O         | String?            |
+| gender                     | Gender (e.g., "M", "F")           | O         | String?            |
+| birthdate                  | Birth date (format: yyyy-MM-dd)   | O         | String?            |
+| email                      | Email address                     | O         | String?            |
+| contactNumber              | Phone number (E.164)              | O         | String?            |
+| otp                        | OTP code (if required)            | O         | String?            |
+| refCode                    | Reference code from OTP           | O         | String?            |
+| refUserCode                | Referral user code                | O         | String?            |
+| termAndConditionVersion    | T&C version accepted              | O         | String?            |
+| dataPrivacyVersion         | Data privacy version accepted     | O         | String?            |
+| marketingOptionsVersion    | Marketing options version         | O         | String?            |
+| emailMarketing             | Email marketing consent           | O         | Boolean?           |
+| smsMarketing               | SMS marketing consent             | O         | Boolean?           |
+| notificationMarketing      | Push notification consent         | O         | Boolean?           |
+| lineMarketing              | LINE marketing consent            | O         | Boolean?           |
+| phoneMarketing             | Phone marketing consent           | O         | Boolean?           |
+| options                    | Additional custom options         | O         | Map<String, Any>?  |
+| deviceNotificationEnable   | Enable device notifications       | O         | Boolean            |
+
+- Response (`RegisterResponse`)
+  HTTP status: 200
+
+| Field Name | Description              | Mandatory | Data Type |
+|------------|--------------------------|-----------|-----------|
+| token      | Auth token               | O         | String    |
+| userId     | User ID                  | O         | String    |
+| usercode   | User code                | O         | String    |
+| status     | Registration status      | O         | String    |
+
+- Usage
+
+```kotlin
+// Create registration form
+val registerForm = RegisterForm(
+    username = "user@example.com",
+    password = "SecureP@ss123",
+    confirmPassword = "SecureP@ss123",
+    firstname = "John",
+    lastname = "Doe",
+    email = "user@example.com",
+    contactNumber = "+66900000000",
+    otp = "123456",
+    refCode = "REFCODE",
+    termAndConditionVersion = "1.0",
+    dataPrivacyVersion = "1.0",
+    emailMarketing = true,
+    smsMarketing = false,
+    notificationMarketing = true
+)
+
+// Suspend
+val result = auth.register(registerForm)
+
+// Callback
+auth.register(registerForm) { result ->
+    when (result) {
+        is AuthResult.SuccessRegister -> {
+            // Handle successful registration
+            val token = result.result.token
+            val userId = result.result.userId
+            val usercode = result.result.usercode
+        }
+        is AuthResult.Error -> {
+            // Handle error
+            val errorCode = result.error.code
+            val errorMessage = result.error.message
+        }
+    }
+}
+```
+
+#### Error Handling
+
+| Error Code | Error ID | Scenario                  | User Message                              | Recommended Action                     |
+|------------|----------|---------------------------|-------------------------------------------|----------------------------------------|
+| 409        | 2078     | Username already exists   | "Username already in use"                 | Let user choose different username     |
+| 409        | 2079     | Email already exists      | "Email already registered"                | Suggest login or password reset        |
+| 409        | 2080     | Phone already exists      | "Phone number already registered"         | Suggest login or password reset        |
+| 400        | 2081     | Password too weak         | "Password does not meet requirements"     | Show password requirements             |
+| 400        | 2082     | Passwords don't match     | "Passwords do not match"                  | Let user re-enter passwords            |
+| 409        | 2091     | Invalid OTP               | "Invalid OTP code"                        | Let user request new OTP               |
+| 409        | 2092     | OTP expired               | "OTP code expired"                        | Resend OTP                             |
+
+#### Implementation Example
+
+```kotlin
+auth.register(registerForm) { result ->
+    when (result) {
+        is AuthResult.SuccessRegister -> {
+            // Registration successful, user is logged in
+            navigateToHome()
+        }
+        is AuthResult.Error -> {
+            val action = when {
+                result.error.code == "409" && result.error.id == "2078" ->
+                    ErrorAction.ShowUsernameExistsError()
+                result.error.code == "409" && result.error.id == "2079" ->
+                    ErrorAction.ShowEmailExistsError()
+                result.error.code == "409" && result.error.id == "2080" ->
+                    ErrorAction.ShowPhoneExistsError()
+                result.error.code == "400" && result.error.id == "2081" ->
+                    ErrorAction.ShowPasswordRequirements()
+                result.error.code == "400" && result.error.id == "2082" ->
+                    ErrorAction.ShowPasswordMismatchError()
+                result.error.code == "409" && result.error.id == "2091" ->
+                    ErrorAction.ShowInvalidOtpError()
+                result.error.code == "409" && result.error.id == "2092" ->
+                    ErrorAction.ResendOtp()
+                else ->
+                    ErrorAction.ShowGenericError(result.error.message)
+            }
+            handleErrorAction(action)
+        }
+    }
+}
+```
+
+#### Complete Registration Flow Example
+
+```kotlin
+class RegistrationViewModel {
+    private val auth = BuzzebeesSDK.instance().auth
+    private val otp = BuzzebeesSDK.instance().otp
+    
+    private var savedRefCode: String? = null
+    
+    // Step 1: Request OTP
+    fun requestOtp(phoneNumber: String) {
+        otp.getOtp(phoneNumber, "register") { result ->
+            when (result) {
+                is OTPResult.SuccessGetOTP -> {
+                    savedRefCode = result.result.refcode
+                    navigateToOtpInput()
+                }
+                is OTPResult.Error -> handleError(result.error)
+            }
+        }
+    }
+    
+    // Step 2: Validate OTP
+    fun verifyOtp(otpCode: String, phoneNumber: String) {
+        otp.validateOtp(
+            otp = otpCode,
+            refCode = savedRefCode ?: "",
+            contactNumber = phoneNumber,
+            use = true,
+            channel = "register"
+        ) { result ->
+            when (result) {
+                is OTPResult.SuccessValidateOTP -> {
+                    navigateToRegistrationForm()
+                }
+                is OTPResult.Error -> handleError(result.error)
+            }
+        }
+    }
+    
+    // Step 3: Complete Registration
+    fun completeRegistration(
+        username: String,
+        password: String,
+        firstname: String,
+        lastname: String,
+        email: String,
+        phoneNumber: String,
+        otpCode: String
+    ) {
+        val form = RegisterForm(
+            username = username,
+            password = password,
+            confirmPassword = password,
+            firstname = firstname,
+            lastname = lastname,
+            email = email,
+            contactNumber = phoneNumber,
+            otp = otpCode,
+            refCode = savedRefCode,
+            termAndConditionVersion = "1.0",
+            dataPrivacyVersion = "1.0"
+        )
+        
+        auth.register(form) { result ->
+            when (result) {
+                is AuthResult.SuccessRegister -> {
+                    // User registered and logged in
+                    navigateToHome()
+                }
+                is AuthResult.Error -> handleError(result.error)
+            }
+        }
+    }
+}
+```
+
+---
+
 ### forgotPassword
 
 - Request (caller-supplied)
@@ -570,279 +779,6 @@ auth.resetPassword("user@example.com", "REFCODE", "NewP@ssw0rd") { result ->
 
 ---
 
-## OTP Channel Types
-
-The `channel` parameter in OTP methods specifies the purpose/context of the OTP request. Use these predefined values:
-
-| Channel Value      | Description                           | Use Case                          |
-|-------------------|---------------------------------------|-----------------------------------|
-| `"register"`       | User registration process             | New account creation              |
-| `"contact_number"` | Phone number verification/update      | Adding/updating phone number      |
-| `"email"`          | Email verification/update             | Adding/updating email address     |
-| `"forget_password"`| Password reset process                | Forgot password flow              |
-| `"login"`          | Login verification                    | Two-factor authentication         |
-
-### Kotlin OtpChannel Enum (Reference)
-
-```kotlin
-enum class OtpChannel(val value: String) {
-    REGISTER("register"),
-    CONTACT_NUMBER("contact_number"),
-    EMAIL("email"),
-    FORGET_PASSWORD("forget_password"),
-    LOGIN("login")
-}
-```
-
----
-
-### getOtp (Phone Number OTP)
-
-- Request (caller-supplied)
-
-| Field Name    | Description                    | Mandatory | Data Type |
-|---------------|--------------------------------|-----------|-----------|
-| contactNumber | Phone number (E.164)          | M         | String    |
-| channel       | OTP channel type (see above)  | M         | String    |
-
-- Response `OtpResponse`
-  HTTP status: 200
-
-| Field Name | Description                     | Mandatory | Data Type |
-|------------|---------------------------------|-----------|-----------|
-| refcode    | Reference code for confirmation | O         | String    |
-| expiredate | Expiration time (epoch millis)  | O         | Long/Int  |
-
-```kotlin
-// Suspend
-val result = auth.getOtp("+66900000000", "register")
-
-// Callback
-auth.getOtp("+66900000000", "register") { result ->
-    when (result) {
-        is AuthResult.SuccessGetOTP -> {
-            // Handle successful OTP request
-            val refCode = result.result.refcode
-            val expireDate = result.result.expiredate
-        }
-        is AuthResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
-#### Channel Usage Examples
-
-```kotlin
-// For user registration
-auth.getOtp(contactNumber, "register") { result -> /* handle */ }
-
-// For phone number verification/update
-auth.getOtp(contactNumber, "contact_number") { result -> /* handle */ }
-
-// For password reset
-auth.getOtp(contactNumber, "forget_password") { result -> /* handle */ }
-
-// For login 2FA
-auth.getOtp(contactNumber, "login") { result -> /* handle */ }
-```
-
----
-
-### getOtpEmail (Email OTP)
-
-- Request (caller-supplied)
-
-| Field Name | Description                   | Mandatory | Data Type |
-|------------|-------------------------------|-----------|-----------|
-| email      | Email address                 | M         | String    |
-| channel    | OTP channel type (see above)  | M         | String    |
-
-- Response `OtpResponse`
-  HTTP status: 200
-
-| Field Name | Description                     | Mandatory | Data Type |
-|------------|---------------------------------|-----------|-----------|
-| refcode    | Reference code for confirmation | O         | String    |
-| expiredate | Expiration time (epoch millis)  | O         | Long/Int  |
-
-```kotlin
-// Suspend
-val result = auth.getOtpEmail("user@example.com", "email")
-
-// Callback
-auth.getOtpEmail("user@example.com", "email") { result ->
-    when (result) {
-        is AuthResult.SuccessGetOTP -> {
-            // Handle successful email OTP request
-            val refCode = result.result.refcode
-            val expireDate = result.result.expiredate
-        }
-        is AuthResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
-#### Channel Usage Examples
-
-```kotlin
-// For user registration
-auth.getOtpEmail(email, "register") { result -> /* handle */ }
-
-// For email verification/update
-auth.getOtpEmail(email, "email") { result -> /* handle */ }
-
-// For password reset
-auth.getOtpEmail(email, "forget_password") { result -> /* handle */ }
-
-// For login 2FA
-auth.getOtpEmail(email, "login") { result -> /* handle */ }
-```
-
-#### Error Handling (Both getOtp and getOtpEmail)
-
-| Error Code | Error ID | Scenario               | User Message                                            | Recommended Action                    |
-|------------|----------|------------------------|---------------------------------------------------------|---------------------------------------|
-| 409        | 2078     | Contact already in use | "This contact is already in use. Please use another"   | Let user enter new contact            |
-| 409        | 2092     | Invalid format         | "Invalid contact format"                                | Show correct format example           |
-| 429        | -        | Rate limit exceeded    | "OTP requested too frequently. Please wait 60 seconds" | Show countdown timer                  |
-| 404        | -        | Contact not found      | "Contact not found in system"                           | Suggest user to register first        |
-
-#### Implementation Example
-
-```kotlin
-// Phone OTP
-auth.getOtp(contactNumber, "register") { result ->
-    when (result) {
-        is AuthResult.SuccessGetOTP -> {
-            startOtpTimer(result.result.expiredate)
-        }
-        is AuthResult.Error -> {
-            handleOtpError(result.error)
-        }
-    }
-}
-
-// Email OTP
-auth.getOtpEmail(email, "email") { result ->
-    when (result) {
-        is AuthResult.SuccessGetOTP -> {
-            startOtpTimer(result.result.expiredate)
-        }
-        is AuthResult.Error -> {
-            handleOtpError(result.error)
-        }
-    }
-}
-
-private fun handleOtpError(error: ErrorResponse) {
-    val action = when {
-        error.code == "409" && error.id == "2078" ->
-            ErrorAction.ShowContactDuplicateError()
-        error.code == "409" && error.id == "2092" ->
-            ErrorAction.ShowContactFormatError()
-        error.code == "429" ->
-            ErrorAction.ShowRateLimitError(60)
-        error.code == "404" ->
-            ErrorAction.ShowContactNotFoundError()
-        else ->
-            ErrorAction.ShowGenericError(error.message)
-    }
-    handleErrorAction(action)
-}
-```
-
----
-
-### confirmOtp
-
-- Request (caller-supplied)
-
-| Field Name    | Description          | Mandatory | Data Type |
-|---------------|----------------------|-----------|-----------|
-| otp           | One-time password    | M         | String    |
-| refCode       | Ref code from getOtp | M         | String    |
-| contactNumber | Phone number (E.164) | M         | String    |
-
-- Response `ConfirmOtpResponse`
-  HTTP status: 200
-
-| Field Name | Description           | Mandatory | Data Type |
-|------------|-----------------------|-----------|-----------|
-| token      | Auth token on success | O         | String    |
-| success    | Boolean status        | O         | Boolean   |
-
-```kotlin
-// Suspend
-val result = auth.confirmOtp(
-    otp = "123456",
-    refCode = "REFCODE",
-    contactNumber = "+66900000000"
-)
-
-// Callback
-auth.confirmOtp(
-    otp = "123456",
-    refCode = "REFCODE",
-    contactNumber = "+66900000000"
-) { result ->
-    when (result) {
-        is AuthResult.SuccessConfirmOTP -> {
-            // Handle successful OTP confirmation
-            val token = result.result.token
-            val success = result.result.success
-        }
-        is AuthResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
-#### Error Handling
-
-| Error Code | Error ID | Scenario          | User Message                               | Recommended Action                                       |
-|------------|----------|-------------------|--------------------------------------------|----------------------------------------------------------|
-| 409        | 2091     | Invalid OTP       | "Invalid OTP code"                         | Let user enter OTP again, show "Request new code" button |
-| 409        | 2092     | OTP expired       | "OTP code expired"                         | Resend OTP automatically                                 |
-| 429        | -        | Too many attempts | "Too many attempts. Please wait 5 minutes" | Lock input and show countdown                            |
-
-#### Implementation Example
-
-```kotlin
-auth.confirmOtp(otp, refCode, contactNumber) { result ->
-    when (result) {
-        is AuthResult.SuccessConfirmOTP -> {
-            // Handle successful OTP confirmation
-        }
-        is AuthResult.Error -> {
-            val action = when {
-                result.error.code == "409" && result.error.id == "2091" ->
-                    ErrorAction.ShowInvalidOtpError()
-                result.error.code == "409" && result.error.id == "2092" ->
-                    ErrorAction.ResendOtpAutomatically()
-                result.error.code == "429" ->
-                    ErrorAction.LockOtpInput(300) // 5 minutes
-                else ->
-                    ErrorAction.ShowGenericError(result.error.message)
-            }
-            handleErrorAction(action)
-        }
-    }
-}
-```
-
----
-
 ### resume (token refresh via backend)
 
 - Request (caller-supplied)
@@ -851,7 +787,7 @@ auth.confirmOtp(otp, refCode, contactNumber) { result ->
 |------------|-------------|-----------|-----------|
 | -          | None        | -         | -         |
 
-- Response (`ResumeResponse`)  
+- Response (`ResumeResponse`)
   HTTP status: 200
 
 | Field Name      | Description           | Mandatory | Data Type |
@@ -967,166 +903,6 @@ auth.checkVersion { result ->
             // Handle error
             val errorCode = result.error.code
             val errorMessage = result.error.message
-        }
-    }
-}
-```
-
----
-
-### validateOtp (Validate OTP for phone number)
-
-- Request (caller-supplied)
-
-| Field Name    | Description                   | Mandatory | Data Type |
-|---------------|-------------------------------|-----------|----------|
-| otp           | One-time password             | M         | String   |
-| refCode       | Ref code from getOtp          | M         | String   |
-| contactNumber | Phone number (E.164)          | M         | String   |
-| use           | Use OTP immediately           | M         | Boolean  |
-| channel       | OTP channel type (see above)  | O         | String   |
-
-- Response `ValidateOtpResponse`
-  HTTP status: 200
-
-| Field Name   | Description           | Mandatory | Data Type |
-|--------------|----------------------- |-----------|----------|
-| validatecode | Validation code/token | O         | String   |
-
-```kotlin
-// Suspend
-val result = auth.validateOtp(
-    otp = "123456",
-    refCode = "REFCODE",
-    contactNumber = "+66900000000",
-    use = true,
-    channel = "register"
-)
-
-// Callback
-auth.validateOtp(
-    otp = "123456",
-    refCode = "REFCODE",
-    contactNumber = "+66900000000",
-    use = true,
-    channel = "register"
-) { result ->
-    when (result) {
-        is AuthResult.SuccessValidateOTP -> {
-            // Handle successful OTP validation
-            val validateCode = result.result.validatecode
-        }
-        is AuthResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
-#### Difference from confirmOtp
-
-- **validateOtp**: Validates OTP without automatically logging in. Returns validation status.
-- **confirmOtp**: Validates OTP AND logs in the user. Returns auth token.
-
-Use `validateOtp` when you need to verify OTP separately from login, and `confirmOtp` for immediate authentication.
-
-#### Error Handling
-
-| Error Code | Error ID | Scenario          | User Message                               | Recommended Action                                       |
-|------------|----------|-------------------|--------------------------------------------|----------------------------------------------------------|
-| 409        | 2091     | Invalid OTP       | "Invalid OTP code"                         | Let user enter OTP again, show "Request new code" button |
-| 409        | 2092     | OTP expired       | "OTP code expired"                         | Resend OTP automatically                                 |
-| 429        | -        | Too many attempts | "Too many attempts. Please wait 5 minutes" | Lock input and show countdown                            |
-
----
-
-### validateOtpEmail (Validate OTP for email)
-
-- Request (caller-supplied)
-
-| Field Name | Description                   | Mandatory | Data Type |
-|------------|-------------------------------|-----------|----------|
-| otp        | One-time password             | M         | String   |
-| refCode    | Ref code from getOtpEmail     | M         | String   |
-| email      | Email address                 | M         | String   |
-| use        | Use OTP immediately           | M         | Boolean  |
-| channel    | OTP channel type (see above)  | O         | String   |
-
-- Response `ValidateOtpResponse`
-  HTTP status: 200
-
-| Field Name   | Description           | Mandatory | Data Type |
-|--------------|----------------------- |-----------|----------|
-| validatecode | Validation code/token | O         | String   |
-
-```kotlin
-// Suspend
-val result = auth.validateOtpEmail(
-    otp = "123456",
-    refCode = "REFCODE",
-    email = "user@example.com",
-    use = true,
-    channel = "email"
-)
-
-// Callback
-auth.validateOtpEmail(
-    otp = "123456",
-    refCode = "REFCODE",
-    email = "user@example.com",
-    use = true,
-    channel = "email"
-) { result ->
-    when (result) {
-        is AuthResult.SuccessValidateOTP -> {
-            // Handle successful email OTP validation
-            val validateCode = result.result.validatecode
-        }
-        is AuthResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
-        }
-    }
-}
-```
-
-#### Difference from confirmOtp
-
-- **validateOtpEmail**: Validates email OTP without automatically logging in.
-- **confirmOtp**: Uses phone number validation for login (returns auth token).
-
-Use `validateOtpEmail` for email verification flows, and `confirmOtp` for phone-based login.
-
-#### Error Handling
-
-Same as `validateOtp` above.
-
-#### Implementation Example
-
-```kotlin
-// Email verification flow
-auth.validateOtpEmail(otp, refCode, email, use = true, "email") { result ->
-    when (result) {
-        is AuthResult.SuccessValidateOTP -> {
-            // Email verified successfully
-            val validateCode = result.result.validatecode
-            navigateToNextStep()
-        }
-        is AuthResult.Error -> {
-            val action = when {
-                result.error.code == "409" && result.error.id == "2091" ->
-                    ErrorAction.ShowInvalidOtpError()
-                result.error.code == "409" && result.error.id == "2092" ->
-                    ErrorAction.ResendOtpAutomatically()
-                result.error.code == "429" ->
-                    ErrorAction.LockOtpInput(300) // 5 minutes
-                else ->
-                    ErrorAction.ShowGenericError(result.error.message)
-            }
-            handleErrorAction(action)
         }
     }
 }

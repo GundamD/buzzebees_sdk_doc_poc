@@ -54,7 +54,7 @@ Retrieves detailed information for a specific campaign. Automatically validates 
 | deviceLocale | Device locale       | O         | Int?                |
 | options      | Additional options  | O         | Map<String, String> |
 
-- Response (`CampaignDetails`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/CampaignDetails.kt)  
+- Response (`CampaignDetails`) 
   HTTP status: 200
 
 ### CampaignDetails Entity Fields
@@ -108,13 +108,13 @@ Retrieves detailed information for a specific campaign. Automatically validates 
 | pointType               | Type of points (use/get)         | String?            |
 | defaultPrivilegeMessage | Default privilege message        | String?            |
 | isNotAutoUse            | Not auto-use flag                | Boolean?           |
-| pictures                | Campaign image gallery           | List<Picture>?     |
+| pictures                | Campaign image gallery           | `List<Picture>?`    |
 | isConditionPass         | User meets campaign conditions   | Boolean?           |
 | conditionAlertId        | Condition alert identifier       | Int?               |
 | fullImageUrl            | Full campaign image URL          | String?            |
 | subCampaignStyles       | Sub-campaign style configuration | SubCampaignStyle?  |
-| subCampaigns            | List of sub-campaigns            | List<SubCampaign>? |
-| related                 | Related campaigns                | List<Campaign>?    |
+| subCampaigns            | List of sub-campaigns            | `List<SubCampaign>?` |
+| related                 | Related campaigns                | `List<Campaign>?`    |
 | isFavourite             | User marked as favorite          | Boolean?           |
 
 ### SDK-Calculated Fields (Display/State)
@@ -128,9 +128,9 @@ Retrieves detailed information for a specific campaign. Automatically validates 
 | displayCampaignDescription| Normalized description               | String                 |
 | displayConditions        | Normalized conditions                 | String                 |
 | displayFullImageUrl      | Normalized full image URL             | String                 |
-| displayPictures          | Normalized pictures list              | List<String>           |
+| displayPictures          | Normalized pictures list              | `List<String>`           |
 | displayCampaignPoint     | Formatted points string               | String                 |
-| displayVariants          | Normalized variant options            | List<VariantOption>?   |
+| displayVariants          | Normalized variant options            | `List<VariantOption>?`   |
 | displaySubVariants       | Normalized sub-variants by variant ID | Map<String, List>?     |
 
 - Usage
