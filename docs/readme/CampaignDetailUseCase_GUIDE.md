@@ -10,6 +10,154 @@ val campaignDetailService = BuzzebeesSDK.instance().campaignDetailUseCase
 
 ---
 
+## Quick Start
+
+```kotlin
+// 1. Set display texts once at initialization
+campaignDetailService.setDisplayTexts(CampaignDetailExtractorConfig.THAI)
+
+// 2. Use methods without worrying about localization
+val result = campaignDetailService.getCampaignDetail(id = "12345")
+val redeemResult = campaignDetailService.redeem(mapOf())
+```
+
+---
+
+## setDisplayTexts
+
+Set display texts configuration once at initialization. After setting, all button names, error messages, and condition alerts will use these texts automatically.
+
+### Method Signature
+
+```kotlin
+fun setDisplayTexts(config: CampaignDetailExtractorConfig)
+fun getDisplayTexts(): CampaignDetailExtractorConfig
+```
+
+### CampaignDetailExtractorConfig Fields
+
+| Category | Field | Default (English) | Thai |
+|----------|-------|-------------------|------|
+| **Button Names** | buttonShopNow | "Shop Now" | "ซื้อเลย" |
+| | buttonAddToCart | "Add to Cart" | "เพิ่มในตะกร้า" |
+| | buttonTakeSurvey | "Take Survey" | "ทำแบบสอบถาม" |
+| | buttonOpen | "Open" | "เปิด" |
+| | buttonDraw | "Draw" | "จับรางวัล" |
+| | buttonDonate | "Donate" | "บริจาค" |
+| | buttonRedeem | "Redeem" | "แลก" |
+| | buttonGetPoints | "Get Points" | "รับแต้ม" |
+| **Condition Alerts** | alertSoldOut | "Campaign sold out" | "สินค้าหมด" |
+| | alertMaxRedemption | "Max redemption per person reached" | "แลกครบจำนวนสูงสุดต่อคนแล้ว" |
+| | alertCoolDown | "Campaign in cool down period" | "อยู่ในช่วงพักการแลก" |
+| | alertConditionInvalid | "Condition invalid" | "เงื่อนไขไม่ถูกต้อง" |
+| | alertSponsorOnly | "Sponsor only campaign" | "สำหรับสปอนเซอร์เท่านั้น" |
+| | alertExpired | "Campaign expired" | "แคมเปญหมดอายุ" |
+| | alertNotStarted | "Campaign not started yet" | "แคมเปญยังไม่เริ่ม" |
+| | alertAppVersionExpired | "App version expired" | "กรุณาอัปเดตแอป" |
+| | alertTermsConditions | "This privilege cannot be redeemed..." | "ไม่สามารถแลกได้ตามเงื่อนไขที่กำหนด" |
+| | alertUnknown | "Unknown condition error" | "เกิดข้อผิดพลาด" |
+| **Validation Errors** | errorNotAuthenticated | "Not Authenticated" | "กรุณาเข้าสู่ระบบ" |
+| | errorInsufficientPoints | "Insufficient points..." | "แต้มไม่เพียงพอ..." |
+| | errorCampaignExpired | "Campaign Expired" | "แคมเปญหมดอายุ" |
+| | errorCampaignSoldOut | "Campaign sold out" | "สินค้าหมด" |
+| | errorCampaignNotLoaded | "Campaign not loaded" | "ไม่พบข้อมูลแคมเปญ" |
+| | errorVariantOnlyForBuy | "Variant selection only..." | "เลือกตัวเลือกได้เฉพาะ..." |
+| | errorVariantOutOfStock | "Selected variant is out of stock" | "ตัวเลือกที่เลือกหมด" |
+| | errorSubVariantOutOfStock | "Selected sub-variant is out of stock" | "ตัวเลือกย่อยที่เลือกหมด" |
+| | errorSelectVariantFirst | "Please select a variant first" | "กรุณาเลือกตัวเลือกหลักก่อน" |
+| | errorQuantityMinimum | "Quantity must be at least 1" | "จำนวนต้องมากกว่า 0" |
+| | errorOnlyXAvailable | "Only %d available" | "เหลือเพียง %d ชิ้น" |
+| | errorMaxDonateAllowed | "Maximum %d donate allowed" | "บริจาคได้สูงสุด %d" |
+| | errorSelectAddress | "Please select a delivery address" | "กรุณาเลือกที่อยู่จัดส่ง" |
+| | errorSelectVariant | "Please select a variant" | "กรุณาเลือกตัวเลือก" |
+| | errorSelectSubVariant | "Please select a sub-variant" | "กรุณาเลือกตัวเลือกย่อย" |
+| | errorTokenRequired | "Token is required" | "กรุณาเข้าสู่ระบบ" |
+| | errorAddToCartFailed | "Failed to add to cart" | "เพิ่มในตะกร้าไม่สำเร็จ" |
+
+### Preset Configurations
+
+```kotlin
+// English (Default)
+CampaignDetailExtractorConfig.DEFAULT
+
+// Thai
+CampaignDetailExtractorConfig.THAI
+```
+
+### Usage Examples
+
+```kotlin
+// Option 1: Use Thai language
+campaignDetailService.setDisplayTexts(CampaignDetailExtractorConfig.THAI)
+
+// Option 2: Use English (default)
+campaignDetailService.setDisplayTexts(CampaignDetailExtractorConfig.DEFAULT)
+
+// Option 3: Custom some texts
+campaignDetailService.setDisplayTexts(
+    CampaignDetailExtractorConfig.THAI.copy(
+        buttonRedeem = "แลกสิทธิ์",
+        buttonShopNow = "ช้อปเลย",
+        errorCampaignSoldOut = "สินค้าหมดแล้วจ้า"
+    )
+)
+
+// Get current configuration
+val currentConfig = campaignDetailService.getDisplayTexts()
+```
+
+### Helper Functions
+
+The config provides helper functions for formatted messages:
+
+```kotlin
+// Format insufficient points error
+config.formatInsufficientPoints(required = 500L, available = 100L)
+// → "แต้มไม่เพียงพอ ต้องการ: 500, มี: 100"
+
+// Format only X available error
+config.formatOnlyXAvailable(available = 5)
+// → "เหลือเพียง 5 ชิ้น"
+
+// Format max donate allowed error
+config.formatMaxDonateAllowed(max = 10)
+// → "บริจาคได้สูงสุด 10"
+```
+
+### When to Call
+
+- **At app startup** - Set once in Application class or main Activity
+- **On language change** - Update when user changes app language
+
+```kotlin
+// Example: In Application class
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        
+        // Initialize SDK
+        BuzzebeesSDK.init(this, config)
+        
+        // Set display texts for campaign detail service
+        BuzzebeesSDK.instance().campaignDetailUseCase.setDisplayTexts(
+            CampaignDetailExtractorConfig.THAI
+        )
+    }
+}
+
+// Example: On language change
+fun onLanguageChanged(locale: String) {
+    val config = if (locale == "th") {
+        CampaignDetailExtractorConfig.THAI
+    } else {
+        CampaignDetailExtractorConfig.DEFAULT
+    }
+    BuzzebeesSDK.instance().campaignDetailUseCase.setDisplayTexts(config)
+}
+```
+
+---
+
 ## Campaign Types Reference
 
 | Type Value | Constant Name                        | Description                  |
@@ -803,12 +951,20 @@ sealed class CampaignDetailResult {
 
 The CampaignDetailUseCase provides complete campaign detail management including:
 
+- **`setDisplayTexts()` method** - Configure all button names, error messages, and condition alerts once
 - **Campaign Detail Retrieval**: Automatic validation, button catalog calculation, and display normalization
 - **Variant Selection**: Primary and sub-variant selection for BUY campaigns with cascading validation
 - **Address Selection**: Delivery address management for shipped campaigns
 - **Quantity Management**: Quantity selection with stock validation for BUY and DONATE campaigns
 - **Redemption**: Unified redemption flow handling different campaign types with appropriate next step guidance
 
-All methods are available in both suspend (coroutine) and callback versions. The SDK handles complex validation, state management, and flow determination automatically.
+**Key Features:**
+- Easy localization - just change config at startup
+- Consistent texts across all campaign operations
+- Built-in presets for English (`DEFAULT`) and Thai (`THAI`)
+- Helper functions for formatted error messages
+- All methods available in both suspend (coroutine) and callback versions
+
+The SDK handles complex validation, state management, and flow determination automatically.
 
 ---
