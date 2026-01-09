@@ -201,6 +201,8 @@ while (hasMore) {
 
 Pre-processed display item with extracted message. **Use this for UI display.**
 
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/point_log/PointLogDisplayItem.kt)
+
 | Field Name     | Description                              | Data Type     |
 |----------------|------------------------------------------|---------------|
 | displayMessage | Pre-extracted message ready to display   | String        |
@@ -242,6 +244,8 @@ Indicates where the `displayMessage` was extracted from:
 ## PointLogExtractorConfig
 
 Configuration for customizing message extraction behavior and display texts.
+
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/services/pointLog/PointLogExtractorConfig.kt)
 
 | Field                    | Description                           | Default                          |
 |--------------------------|---------------------------------------|----------------------------------|
@@ -292,6 +296,8 @@ val result = pointLogService.getPointLog("2025-01", "earn")
 ## PointLog Entity (Raw Data)
 
 Original API response data.
+
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/point_log/PointLog.kt)
 
 | Field Name   | Description                         | Data Type | JSON Field   |
 |--------------|-------------------------------------|-----------|--------------|
@@ -410,7 +416,148 @@ fun PointLogItem(item: PointLogDisplayItem) {
 
 ## Message Extraction Flow
 
-The SDK automatically extracts display messages using the following priority:
+The SDK automatically extracts display messages using the following decision flow:
+
+### Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         MESSAGE EXTRACTION FLOW                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  STEP 1: Check Trace Point    │
+                    │  Is message a JSON Array      │
+                    │  with "userDescription"?      │
+                    └───────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+               [YES]                            [NO]
+                    │                               │
+                    ▼                               ▼
+    ┌───────────────────────────┐   ┌───────────────────────────────┐
+    │ ✅ Use userDescription    │   │  STEP 2: Check Trace          │
+    │    from first item        │   │  Is detail a JSON Array       │
+    │                           │   │  with "name"?                 │
+    │ Also extract:             │   └───────────────────────────────┘
+    │ • points (override)       │                   │
+    │                           │   ┌───────────────┴───────────────┐
+    │ Source: TRACE_POINT       │   ▼                               ▼
+    └───────────────────────────┘  [YES]                          [NO]
+                                    │                               │
+                                    ▼                               ▼
+                    ┌───────────────────────────┐   ┌───────────────────────────┐
+                    │ ✅ Use name from          │   │  STEP 3: Check Type       │
+                    │    first item             │   │                           │
+                    │                           │   │  Is type one of:          │
+                    │ Source: TRACE             │   │  redeem/burn/purchase?    │
+                    └───────────────────────────┘   └───────────────────────────┘
+                                                                │
+                                                ┌───────────────┴───────────────┐
+                                                ▼                               ▼
+                                           [YES]                            [NO]
+                                                │                               │
+                                                ▼                               ▼
+              ┌─────────────────────────────────────┐       ┌─────────────────────────────────────┐
+              │    REDEEM/BURN/PURCHASE PATH        │       │    GENERAL PATH (earn/trace/etc)    │
+              └─────────────────────────────────────┘       └─────────────────────────────────────┘
+                                │                                           │
+                                ▼                                           ▼
+              ┌─────────────────────────────────────┐       ┌─────────────────────────────────────┐
+              │ Is detail non-empty and NOT JSON?   │       │ Does message contain                │
+              └─────────────────────────────────────┘       │ welcomePointKeyword?                │
+                                │                           │ (default: "NewRegister")            │
+              ┌─────────────────┴─────────────────┐         └─────────────────────────────────────┘
+              ▼                                   ▼                         │
+           [YES]                               [NO]         ┌───────────────┴───────────────┐
+              │                                   │         ▼                               ▼
+              ▼                                   │      [YES]                            [NO]
+┌─────────────────────────────┐                   │         │                               │
+│ ✅ Use detail               │                   │         ▼                               │
+│                             │                   │  ┌─────────────────────┐                │
+│ Source: DETAIL              │                   │  │ ✅ Use              │                │
+└─────────────────────────────┘                   │  │ welcomePointMessage │                │
+                                                  │  │                     │                │
+                                                  │  │ Source: ORIGINAL    │                │
+                                                  │  └─────────────────────┘                │
+                                                  │                                         │
+                                                  ▼                                         ▼
+                              ┌─────────────────────────────────────────────────────────────────┐
+                              │                    STEP 4: Try JSON Parsing                     │
+                              │                    (Same for both paths)                        │
+                              └─────────────────────────────────────────────────────────────────┘
+                                                            │
+                                                            ▼
+                              ┌─────────────────────────────────────────────────────────────────┐
+                              │ Is message non-empty?                                           │
+                              └─────────────────────────────────────────────────────────────────┘
+                                                            │
+                                        ┌───────────────────┴───────────────────┐
+                                        ▼                                       ▼
+                                     [YES]                                    [NO]
+                                        │                                       │
+                                        ▼                                       │
+                              ┌───────────────────────────────┐                 │
+                              │ Try extractFromJsonMessage()  │                 │
+                              │                               │                 │
+                              │ Extract from JSON:            │                 │
+                              │ • "message" or "Message"      │                 │
+                              │ • "FullImageUrl"              │                 │
+                              │                               │                 │
+                              │ Supports:                     │                 │
+                              │ • JSONObject                  │                 │
+                              │ • JSONArray (use first item)  │                 │
+                              └───────────────────────────────┘                 │
+                                                │                               │
+                                ┌───────────────┴───────────────┐               │
+                                ▼                               ▼               │
+                           [Found]                         [Not Found]          │
+                                │                               │               │
+                                ▼                               ▼               │
+            ┌───────────────────────────────┐    ┌───────────────────────────┐  │
+            │ ✅ Use extracted message      │    │ Is message NOT valid JSON?│  │
+            │    + imageUrl if present      │    │ (plain text check)        │  │
+            │                               │    └───────────────────────────┘  │
+            │ Source: JSON_OBJECT           │                    │              │
+            │     or JSON_ARRAY             │        ┌───────────┴───────────┐  │
+            └───────────────────────────────┘        ▼                       ▼  │
+                                                  [YES]                   [NO]  │
+                                                     │                       │  │
+                                                     ▼                       │  │
+                                    ┌─────────────────────────┐              │  │
+                                    │ ✅ Use message as-is   │              │  │
+                                    │                        │              │  │
+                                    │ Source: ORIGINAL       │              │  │
+                                    └─────────────────────────┘              │  │
+                                                                             │  │
+                                                                             ▼  ▼
+                              ┌─────────────────────────────────────────────────────────────────┐
+                              │                    STEP 5: Fallback Chain                       │
+                              └─────────────────────────────────────────────────────────────────┘
+                                                            │
+                                                            ▼
+                              ┌─────────────────────────────────────────────────────────────────┐
+                              │  Fallback order (check each until one succeeds):               │
+                              │                                                                 │
+                              │  1. REDEEM PATH ONLY: (already handled above)                  │
+                              │                                                                 │
+                              │  2. GENERAL PATH ONLY: detail (if non-empty & not JSON)        │
+                              │     → Source: DETAIL                                           │
+                              │                                                                 │
+                              │  3. campaignName (if useCampaignNameFallback=true & non-empty) │
+                              │     → Source: CAMPAIGN_NAME                                    │
+                              │                                                                 │
+                              │  4. Default message based on points:                           │
+                              │     • points >= 0  → defaultMessageEarn                        │
+                              │     • points < 0   → defaultMessageBurn                        │
+                              │     • points null  → defaultMessageActivity                    │
+                              │     → Source: DEFAULT                                          │
+                              └─────────────────────────────────────────────────────────────────┘
+```
+
+### Priority Summary
 
 | Priority | Condition | Source | Output |
 |----------|-----------|--------|--------|

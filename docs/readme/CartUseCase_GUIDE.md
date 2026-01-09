@@ -2,32 +2,38 @@
 
 This guide shows how to initialize and use every public method in `CartUseCase`, with suspend
 and callback examples where available. The CartUseCase provides comprehensive shopping cart
-management functionality including adding items to cart, retrieving cart count, and managing
-access tokens for cart operations.
+management functionality including adding items to cart, retrieving cart count, and generating
+shopping cart URLs for WebView integration.
 
 ### Getting an instance
 
 ```kotlin
-val cartService = BuzzebeesSDK.instance().cartUseCase
+val cartService = BuzzebeesSDK.instance().cart
 ```
 
 ---
 
 ### addCart
 
-Adds a campaign item to the user's shopping cart with specified parameters.
+Adds a campaign item to the user's shopping cart with specified parameters. Automatically generates
+a shopping cart URL on success for immediate checkout flow.
 
 - Request (caller-supplied)
 
-| Field Name       | Description                         | Mandatory | Data Type |
-|------------------|-------------------------------------|-----------|-----------|
-| id               | Campaign identifier                 | M         | String    |
-| mode             | Add mode (e.g., "add", "replace")   | M         | String    |
-| qty              | Quantity to add                     | M         | String    |
-| sideCampaignJson | Side campaign configuration in JSON | M         | String    |
+| Field Name       | Description                                              | Mandatory | Data Type | Default |
+|------------------|----------------------------------------------------------|-----------|-----------|---------|
+| id               | Campaign identifier                                      | M         | String    | -       |
+| mode             | Add mode (e.g., "add")                                   | M         | String    | -       |
+| qty              | Quantity to add                                          | M         | String    | -       |
+| sideCampaignJson | Side campaign configuration in JSON                      | O         | String    | ""      |
+| clearCart        | Whether to clear cart before adding (for immediate checkout) | O     | Boolean   | true    |
 
-- Response (`CartCountResponse`)
-  HTTP status: 200
+- Response (`CartResult.SuccessAddCart`)
+
+| Field Name | Description                        | Data Type          |
+|------------|------------------------------------|--------------------|
+| data       | Cart count response                | CartCountResponse  |
+| cartUrl    | Shopping cart URL for WebView      | String?            |
 
 ### CartCountResponse Entity Fields
 
@@ -42,40 +48,53 @@ Adds a campaign item to the user's shopping cart with specified parameters.
 val result = cartService.addCart(
     id = "12345",
     mode = "add",
-    qty = "2",
-    sideCampaignJson = """{"color": "red", "size": "M"}"""
+    qty = "1"
 )
 
+when (result) {
+    is CartResult.SuccessAddCart -> {
+        val totalItems = result.data.cartCount
+        val cartUrl = result.cartUrl
+        
+        println("Item added successfully!")
+        println("Total items in cart: $totalItems")
+        
+        // Open cart in WebView
+        cartUrl?.let { url ->
+            openWebView(url)
+        }
+    }
+    is CartResult.Error -> {
+        println("Error: ${result.error.message}")
+    }
+}
+
 // Callback
-cartService.addCart("12345", "add", "1", "{}") { result ->
+cartService.addCart(
+    id = "12345",
+    mode = "add",
+    qty = "2",
+    sideCampaignJson = """{"color": "red", "size": "M"}""",
+    clearCart = true
+) { result ->
     when (result) {
         is CartResult.SuccessAddCart -> {
-            // Handle successful item addition
-            val cartResponse = result.result
-            val totalItems = cartResponse.cartCount
+            val totalItems = result.data.cartCount
+            val cartUrl = result.cartUrl
 
             println("Item added successfully!")
             println("Total items in cart: $totalItems")
+
+            // Open cart in WebView for checkout
+            cartUrl?.let { url ->
+                openWebView(url)
+            }
         }
         is CartResult.Error -> {
-            // Handle error
             val errorCode = result.error.code
             val errorMessage = result.error.message
 
-            when (errorCode) {
-                "CAMPAIGN_NOT_FOUND" -> {
-                    // Handle campaign not found
-                }
-                "INSUFFICIENT_QUANTITY" -> {
-                    // Handle insufficient quantity
-                }
-                "CAMPAIGN_EXPIRED" -> {
-                    // Handle expired campaign
-                }
-                "CART_LIMIT_EXCEEDED" -> {
-                    // Handle cart limit exceeded
-                }
-            }
+            println("Failed to add to cart: $errorMessage (code: $errorCode)")
         }
     }
 }
@@ -91,8 +110,11 @@ Retrieves the total number of items currently in the user's shopping cart.
 
 No parameters required.
 
-- Response (`CartCountResponse`)
-  HTTP status: 200
+- Response (`CartResult.SuccessCartCount`)
+
+| Field Name | Description         | Data Type         |
+|------------|---------------------|-------------------|
+| data       | Cart count response | CartCountResponse |
 
 ### CartCountResponse Entity Fields
 
@@ -106,25 +128,33 @@ No parameters required.
 // Suspend
 val result = cartService.getCartCount()
 
+when (result) {
+    is CartResult.SuccessCartCount -> {
+        val totalItems = result.data.cartCount ?: 0
+        println("Total items in cart: $totalItems")
+        
+        // Update UI badge
+        updateCartBadge(totalItems)
+    }
+    is CartResult.Error -> {
+        println("Failed to get cart count: ${result.error.message}")
+    }
+}
+
 // Callback
 cartService.getCartCount { result ->
     when (result) {
         is CartResult.SuccessCartCount -> {
-            // Handle successful cart count retrieval
-            val cartResponse = result.result
-            val totalItems = cartResponse.cartCount
+            val totalItems = result.data.cartCount ?: 0
 
             println("Cart count retrieved successfully!")
             println("Total items in cart: $totalItems")
 
             // Update UI badge or counter
-            updateCartBadge(totalItems ?: 0)
+            updateCartBadge(totalItems)
         }
         is CartResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
             val errorMessage = result.error.message
-
             println("Failed to get cart count: $errorMessage")
         }
     }
@@ -133,78 +163,183 @@ cartService.getCartCount { result ->
 
 ---
 
-### getAccessToken
+### getCartUrl
 
-Retrieves an access token for cart operations using provided configuration data.
+Generates a shopping cart URL for opening in WebView. Supports different cart types
+for various shopping flows.
 
 - Request (caller-supplied)
 
-| Field Name | Description                       | Mandatory | Data Type |
-|------------|-----------------------------------|-----------|-----------|
-| dataJson   | Configuration data in JSON format | M         | String    |
+| Field Name | Description                                      | Mandatory | Data Type | Default |
+|------------|--------------------------------------------------|-----------|-----------|---------|
+| cartType   | Cart type (e.g., "MarketPlacePrivilege")         | O         | String?   | null    |
 
-- Response (`AccessToken`)
-  HTTP status: 200
+- Response (`CartResult.SuccessCartUrl`)
 
-### AccessToken Entity Fields
-
-| Field Name | Description                 | Data Type | JSON Field |
-|------------|-----------------------------|-----------|------------|
-| data       | Token data container        | Data?     | data       |
-| success    | Operation success indicator | Boolean?  | success    |
-
-### Data Entity Fields
-
-| Field Name | Description  | Data Type | JSON Field |
-|------------|--------------|-----------|------------|
-| key        | Access token | String?   | key        |
+| Field Name | Description                   | Data Type |
+|------------|-------------------------------|-----------|
+| url        | Shopping cart URL for WebView | String    |
 
 - Usage
 
 ```kotlin
-// Prepare configuration data
-val configData = """{
-    "clientId": "your_client_id",
-    "scope": "cart_access",
-    "permissions": ["read", "write"]
-}"""
+// Suspend - Default cart
+val result = cartService.getCartUrl()
 
-// Suspend
-val result = cartService.getAccessToken(configData)
+when (result) {
+    is CartResult.SuccessCartUrl -> {
+        val cartUrl = result.url
+        println("Cart URL: $cartUrl")
+        
+        // Open in WebView
+        openWebView(cartUrl)
+    }
+    is CartResult.Error -> {
+        println("Failed to get cart URL: ${result.error.message}")
+    }
+}
+
+// Suspend - MarketPlace Privilege cart
+val marketplaceResult = cartService.getCartUrl(cartType = "MarketPlacePrivilege")
+
+when (marketplaceResult) {
+    is CartResult.SuccessCartUrl -> {
+        openWebView(marketplaceResult.url)
+    }
+    is CartResult.Error -> {
+        println("Error: ${marketplaceResult.error.message}")
+    }
+}
 
 // Callback
-cartService.getAccessToken(configData) { result ->
+cartService.getCartUrl { result ->
     when (result) {
-        is CartResult.SuccessAccessToken -> {
-            // Handle successful access token retrieval
-            val accessTokenResponse = result.result
-            val isSuccess = accessTokenResponse.success
-            val tokenKey = accessTokenResponse.data?.key
+        is CartResult.SuccessCartUrl -> {
+            val cartUrl = result.url
 
-            if (isSuccess == true && tokenKey != null) {
-                println("Access token retrieved successfully!")
-                println("Token: $tokenKey")
+            println("Cart URL retrieved successfully!")
+            println("URL: $cartUrl")
 
-                // Store token for future cart operations
-                storeAccessToken(tokenKey)
-            } else {
-                println("Token retrieval succeeded but no valid token returned")
+            // Open cart page in WebView
+            openWebView(cartUrl)
+        }
+        is CartResult.Error -> {
+            val errorMessage = result.error.message
+            println("Failed to get cart URL: $errorMessage")
+        }
+    }
+}
+
+// Callback - With cart type
+cartService.getCartUrl(cartType = "MarketPlacePrivilege") { result ->
+    when (result) {
+        is CartResult.SuccessCartUrl -> {
+            openWebView(result.url)
+        }
+        is CartResult.Error -> {
+            println("Error: ${result.error.message}")
+        }
+    }
+}
+```
+
+---
+
+## CartResult Types
+
+The CartUseCase returns sealed class `CartResult` with the following types:
+
+| Result Type        | Description                              | Fields                    |
+|--------------------|------------------------------------------|---------------------------|
+| SuccessAddCart     | Item added to cart successfully          | data, cartUrl             |
+| SuccessCartCount   | Cart count retrieved successfully        | data                      |
+| SuccessCartUrl     | Cart URL generated successfully          | url                       |
+| Error              | Operation failed                         | error (ErrorResponse)     |
+
+---
+
+## Common Usage Patterns
+
+### Pattern 1: Add to Cart and Checkout
+
+```kotlin
+// Add item and immediately open cart for checkout
+suspend fun addToCartAndCheckout(campaignId: String, quantity: Int) {
+    val result = cartService.addCart(
+        id = campaignId,
+        mode = "add",
+        qty = quantity.toString(),
+        clearCart = true  // Clear cart for single-item checkout
+    )
+    
+    when (result) {
+        is CartResult.SuccessAddCart -> {
+            result.cartUrl?.let { url ->
+                openWebView(url)
             }
         }
         is CartResult.Error -> {
-            // Handle error
-            val errorCode = result.error.code
-            val errorMessage = result.error.message
+            showError(result.error.message)
+        }
+    }
+}
+```
 
-            when (errorCode) {
-                "INVALID_CLIENT" -> {
-                    // Handle invalid client credentials
+### Pattern 2: Update Cart Badge
+
+```kotlin
+// Fetch and update cart badge on app launch or after login
+suspend fun refreshCartBadge() {
+    when (val result = cartService.getCartCount()) {
+        is CartResult.SuccessCartCount -> {
+            val count = result.data.cartCount?.toInt() ?: 0
+            cartBadgeView.text = if (count > 0) count.toString() else ""
+            cartBadgeView.isVisible = count > 0
+        }
+        is CartResult.Error -> {
+            // Silently fail or show default state
+            cartBadgeView.isVisible = false
+        }
+    }
+}
+```
+
+### Pattern 3: Open Cart Page
+
+```kotlin
+// Open cart page when user taps cart icon
+fun onCartIconClick() {
+    lifecycleScope.launch {
+        when (val result = cartService.getCartUrl()) {
+            is CartResult.SuccessCartUrl -> {
+                openWebView(result.url)
+            }
+            is CartResult.Error -> {
+                showToast("Unable to open cart")
+            }
+        }
+    }
+}
+```
+
+### Pattern 4: Legacy Callback Style
+
+```kotlin
+// For non-coroutine projects
+class CartManager {
+    
+    fun addToCart(campaignId: String, onResult: (Boolean, String?) -> Unit) {
+        cartService.addCart(
+            id = campaignId,
+            mode = "add",
+            qty = "1"
+        ) { result ->
+            when (result) {
+                is CartResult.SuccessAddCart -> {
+                    onResult(true, result.cartUrl)
                 }
-                "INSUFFICIENT_PERMISSIONS" -> {
-                    // Handle insufficient permissions
-                }
-                "TOKEN_GENERATION_FAILED" -> {
-                    // Handle token generation failure
+                is CartResult.Error -> {
+                    onResult(false, null)
                 }
             }
         }
@@ -217,6 +352,11 @@ cartService.getAccessToken(configData) { result ->
 ## Summary
 
 The CartUseCase provides essential shopping cart functionality for e-commerce applications built
-with the Buzzebees SDK. It offers comprehensive cart management including item addition, cart
-tracking, and access control with both suspend and callback API patterns for flexible integration
-across different architectural approaches.
+with the Buzzebees SDK. Key features include:
+
+- **Add to Cart** - Add items with automatic cart URL generation for seamless checkout
+- **Cart Count** - Retrieve current cart item count for badge updates
+- **Cart URL** - Generate authenticated shopping cart URLs for WebView integration
+- **Dual API Support** - Both suspend functions and callbacks for flexible integration
+
+All methods require user authentication. Ensure the user is logged in before calling cart operations.

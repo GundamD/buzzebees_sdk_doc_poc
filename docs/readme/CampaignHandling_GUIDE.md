@@ -69,7 +69,7 @@ var displaySubVariants: Map<String, List<SubVariantOption>>?
 | 8          | CAMPAIGN_TYPE_INTERFACE              | Interface campaign           |
 | 9          | CAMPAIGN_TYPE_EVENT                  | Event campaign               |
 | 10         | CAMPAIGN_TYPE_MEDIA                  | Media campaign               |
-| 16         | CAMPAIGN_TYPE_NEW                    | New campaign                 |
+| 16         | CAMPAIGN_TYPE_NEWS                   | News campaign                |
 | 20         | CAMPAIGN_TYPE_DONATE                 | Donation campaign            |
 | 33         | CAMPAIGN_TYPE_MARKETPLACE_PRIVILEGE  | Marketplace privilege        |
 
@@ -120,7 +120,7 @@ sealed class CampaignButtonCatalog {
 | Draw (0) | Has delivery | `AddressButton("Draw")` |
 | Draw (0) | No delivery | `RedeemButton("Draw")` |
 | Donate (20) | - | `QuantityButton("Donate")` |
-| Other (Free, Deal, Bid, etc.) | Has delivery | `AddressButton` |
+| Other | Has delivery | `AddressButton` |
 | Other | pointType = "use" | `RedeemButton("Redeem")` |
 | Other | pointType = "get" | `RedeemButton("Get Points")` |
 
@@ -138,9 +138,33 @@ sealed class CampaignButtonCatalog {
 | 1409 | "Campaign expired" | `EXPIRED` |
 | 1410 | "Campaign not started yet" | `CAMPAIGN_PENDING` |
 | 1416 | "App version expired" | `VERSION_EXPIRED` |
-| 1427 | "Terms and conditions not met" | `TERMS_VIOLATION` |
-| - | "Not Authenticated" | `DEVICE_LOGIN` |
-| - | "Insufficient points" | `INSUFFICIENT_POINTS` |
+| 1427 | "Terms and conditions violation" | `TERMS_VIOLATION` |
+
+---
+
+## Error Classes
+
+```kotlin
+sealed class CampaignValidationError(val message: String, val errorId: String) {
+    data class DeviceLogin(val msg: String) : CampaignValidationError(msg, "DEVICE_LOGIN")
+    data class InsufficientPoints(val msg: String) : CampaignValidationError(msg, "INSUFFICIENT_POINTS")
+    data class Expired(val msg: String) : CampaignValidationError(msg, "EXPIRED")
+    data class SoldOut(val msg: String) : CampaignValidationError(msg, "SOLD_OUT")
+    data class MaxPerPerson(val msg: String) : CampaignValidationError(msg, "MAX_PER_PERSON")
+    data class CoolDown(val msg: String) : CampaignValidationError(msg, "COOL_DOWN")
+    data class ConditionInvalid(val msg: String) : CampaignValidationError(msg, "CONDITION_INVALID")
+    data class SponsorOnly(val msg: String) : CampaignValidationError(msg, "SPONSOR_ONLY")
+    data class CampaignPending(val msg: String) : CampaignValidationError(msg, "CAMPAIGN_PENDING")
+    data class VersionExpired(val msg: String) : CampaignValidationError(msg, "VERSION_EXPIRED")
+    data class TermsViolation(val msg: String) : CampaignValidationError(msg, "TERMS_VIOLATION")
+    data class CustomCondition(val msg: String) : CampaignValidationError(msg, "CUSTOM_CONDITION")
+}
+
+sealed class CampaignValidationResult {
+    object Success : CampaignValidationResult()
+    data class Error(val error: CampaignValidationError) : CampaignValidationResult()
+}
+```
 
 ---
 
@@ -152,8 +176,8 @@ The SDK returns a `NextStep` indicating what UI action to take after redemption:
 sealed class NextStep {
     data class ShowCode(val redeemKey: String, val code: String, val campaignId: String) : NextStep()
     data class ShowPointsEarned(val redeemKey: String, val pointsEarned: Double, val campaignId: String) : NextStep()
-    data class ShowDrawSuccess(val redeemKey: String, val campaignId: String, val code: String?, val pointsEarned: Double?) : NextStep()
-    data class ShowAddToCartSuccess(val cartUrl: String?) : NextStep()
+    data class ShowDrawSuccess(val redeemKey: String, val campaignId: String, val code: String? = null, val pointsEarned: Double? = null) : NextStep()
+    data class ShowAddToCartSuccess(val cartUrl: String? = null) : NextStep()
     data class OpenWebsite(val url: String, val urlType: String) : NextStep()
 }
 ```
@@ -162,13 +186,44 @@ sealed class NextStep {
 
 ## Summary
 
-### Key Features
+This Campaign Handling & Validation Guide provides comprehensive SDK features for proper campaign handling:
 
-- **SDK Auto-Validation**: Use built-in `canRedeem`, `errorConditionMessage`, `campaignCatalog`
-- **Simple Integration**: Clear patterns for all campaign types
-- **Server-Side Calculation**: Secure, prevents client manipulation
-- **Type-Safe**: Sealed classes, no magic strings
-- **Unified Flow**: Single `redeem()` method handles all campaign types
+### canRedeem - Campaign Validation
+
+Automatic validation of campaign conditions (calculated by SDK):
+- Authentication check (not device login)
+- Points validation (user points vs required)
+- Expiration validation (using server time)
+- Inventory management (qty, itemCountSold)
+- User eligibility (isConditionPass)
+- Business rule enforcement (conditionAlertId)
+
+### campaignCatalog - Button Type Determination
+
+Pre-calculated button type based on campaign configuration:
+- `NoButton` - Non-redeemable (Event, Media, News)
+- `RedeemButton` - Standard redemption
+- `ShoppingButton` - BUY without variants
+- `ShoppingWithStyleButton` - BUY with variants
+- `AddressButton` - Requires delivery address
+- `QuantityButton` - DONATE with quantity
+
+### Variant/Address/Quantity Selection
+
+SDK methods for managing selections:
+- `selectVariant()` / `selectSubVariant()` - BUY campaigns
+- `selectAddress()` - Delivery campaigns
+- `setQuantity()` / `increaseQuantity()` / `decreaseQuantity()` - Quantity selection
+- `clearAllSelections()` - Reset all selections
+
+### NextStep - Post-Redemption Flow
+
+Clear guidance on what UI to show after redemption:
+- `ShowCode` - Display redemption code
+- `ShowPointsEarned` - Display points earned
+- `ShowDrawSuccess` - Draw/donate success
+- `ShowAddToCartSuccess` - Cart success
+- `OpenWebsite` - Open webview
 
 ---
 
@@ -177,7 +232,6 @@ sealed class NextStep {
 Configure all button names, error messages, and condition alerts once at initialization:
 
 ```kotlin
-// Set display texts once at app startup
 BuzzebeesSDK.instance().campaignDetailUseCase.setDisplayTexts(
     CampaignDetailExtractorConfig.THAI
 )
@@ -186,36 +240,9 @@ BuzzebeesSDK.instance().campaignDetailUseCase.setDisplayTexts(
 ### Available Presets
 
 ```kotlin
-// English (Default)
-CampaignDetailExtractorConfig.DEFAULT
-
-// Thai
-CampaignDetailExtractorConfig.THAI
+CampaignDetailExtractorConfig.DEFAULT  // English
+CampaignDetailExtractorConfig.THAI     // Thai
 ```
-
-### Configurable Fields
-
-| Category | Fields |
-|----------|--------|
-| **Button Names** | buttonShopNow, buttonAddToCart, buttonTakeSurvey, buttonOpen, buttonDraw, buttonDonate, buttonRedeem, buttonGetPoints |
-| **Condition Alerts** | alertSoldOut, alertMaxRedemption, alertCoolDown, alertConditionInvalid, alertSponsorOnly, alertExpired, alertNotStarted, alertAppVersionExpired, alertTermsConditions, alertUnknown |
-| **Validation Errors** | errorNotAuthenticated, errorInsufficientPoints, errorCampaignExpired, errorCampaignSoldOut, errorCampaignNotLoaded, errorVariantOutOfStock, errorSubVariantOutOfStock, errorSelectVariantFirst, errorQuantityMinimum, errorOnlyXAvailable, errorMaxDonateAllowed, errorSelectAddress, errorSelectVariant, errorSelectSubVariant, errorTokenRequired, errorAddToCartFailed |
-
-### Custom Configuration
-
-```kotlin
-val customConfig = CampaignDetailExtractorConfig.THAI.copy(
-    buttonRedeem = "แลกสิทธิ์",
-    buttonShopNow = "ช้อปเลย",
-    alertSoldOut = "สินค้าหมดแล้วจ้า"
-)
-BuzzebeesSDK.instance().campaignDetailUseCase.setDisplayTexts(customConfig)
-```
-
-### When to Call
-
-- **At app startup** - Set once in Application class
-- **On language change** - Update when user changes app language
 
 For complete field reference, see [CampaignDetailUseCase Guide](./CampaignDetailUseCase_GUIDE.md#setdisplaytexts).
 
@@ -223,5 +250,6 @@ For complete field reference, see [CampaignDetailUseCase Guide](./CampaignDetail
 
 ## Related Documentation
 
-- [CampaignDetailUseCase_GUIDE.md](./CampaignDetailUseCase_GUIDE.md) - Detailed API reference
-- [CampaignUseCase_GUIDE.md](./CampaignUseCase_GUIDE.md) - Campaign list operations
+- [SDK Comprehensive Guide](./SDK_COMPREHENSIVE_GUIDE.md) - Complete overview of all SDK capabilities
+- [CampaignDetailUseCase Guide](./CampaignDetailUseCase_GUIDE.md) - Campaign detail and redemption API
+- [CampaignUseCase Guide](./CampaignUseCase_GUIDE.md) - Campaign list operations

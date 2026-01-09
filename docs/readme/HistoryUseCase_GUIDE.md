@@ -38,6 +38,8 @@ fun getDisplayTexts(): HistoryExtractorConfig
 
 ### HistoryExtractorConfig Fields
 
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/services/history/HistoryExtractorConfig.kt)
+
 | Category | Field | Default (English) | Thai |
 |----------|-------|-------------------|------|
 | **Primary Status** | statusReady | "Ready to use" | "พร้อมใช้งาน" |
@@ -203,6 +205,8 @@ historyService.getHistory(historyForm) { result ->
 ## Purchase Entity
 
 ### Raw Fields from API
+
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/history/Purchase.kt)
 
 | Field Name               | Description                          | Data Type | JSON Field               |
 |--------------------------|--------------------------------------|-----------|--------------------------|
@@ -670,6 +674,86 @@ fun HistoryItem(purchase: Purchase, onUse: (Purchase) -> Unit) {
         }
     }
 }
+
+@Composable
+fun StatusBadge(text: String, color: StatusColor) {
+    val (bgColor, textColor) = when (color) {
+        StatusColor.GREEN -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        StatusColor.GRAY -> Color(0xFFF5F5F5) to Color(0xFF616161)
+        StatusColor.RED -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+        StatusColor.ORANGE -> Color(0xFFFFF3E0) to Color(0xFFE65100)
+        StatusColor.BLUE -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
+    }
+    
+    Box(
+        modifier = Modifier
+            .background(bgColor, RoundedCornerShape(4.dp))
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(text, color = textColor, style = MaterialTheme.typography.labelSmall)
+    }
+}
+```
+
+---
+
+## Status Decision Flow
+
+### Standard Campaign (FREE, DEAL)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ voucherExpireDate < now OR expireIn < 0                         │
+│   → displayStatus: EXPIRED (config.statusExpired)               │
+│   → historyCatalog: NoButton                                    │
+│   → canClick: false                                             │
+├─────────────────────────────────────────────────────────────────┤
+│ isUsed == true                                                  │
+│   → displayStatus: USED (config.statusUsed)                     │
+│   → historyCatalog: UseButton(config.buttonViewCode)            │
+│   → canClick: true                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ isUsed == false                                                 │
+│   → displayStatus: REDEEMED (config.statusRedeemed)             │
+│   → historyCatalog: ConfirmButton(config.buttonConfirmUse)      │
+│   → canClick: true                                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Draw Campaign
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ hasWinner && isWinner                                                │
+│   → displayDrawStatus: DRAW_WINNER (config.drawStatusWinner)         │
+│   → displayPrivilegeContent: privilegeMessage                        │
+│   → displayPrivilegeContentType: TEXT / HTML / URL                   │
+├──────────────────────────────────────────────────────────────────────┤
+│ hasWinner && !isWinner                                               │
+│   → displayDrawStatus: DRAW_NOT_WINNER (config.drawStatusNotWinner)  │
+├──────────────────────────────────────────────────────────────────────┤
+│ !hasWinner                                                           │
+│   → displayDrawStatus: DRAW_WAITING (config.drawStatusWaiting)       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Delivery Item
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ isShipped && hasParcelNo                                             │
+│   → displayDeliveryStatus: DELIVERY_SUCCESS (config.deliveryStatus   │
+│     Success)                                                         │
+│   → displayTrackingNo: parcelNo                                      │
+├──────────────────────────────────────────────────────────────────────┤
+│ isShipped && !hasParcelNo                                            │
+│   → displayDeliveryStatus: DELIVERY_SHIPPED (config.deliveryStatus   │
+│     Shipped)                                                         │
+├──────────────────────────────────────────────────────────────────────┤
+│ !isShipped                                                           │
+│   → displayDeliveryStatus: DELIVERY_PREPARING (config.deliveryStatus │
+│     Preparing)                                                       │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

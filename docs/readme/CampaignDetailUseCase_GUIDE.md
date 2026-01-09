@@ -36,6 +36,8 @@ fun getDisplayTexts(): CampaignDetailExtractorConfig
 
 ### CampaignDetailExtractorConfig Fields
 
+[Source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/services/campaign_detail/CampaignDetailExtractorConfig.kt)
+
 | Category | Field | Default (English) | Thai |
 |----------|-------|-------------------|------|
 | **Button Names** | buttonShopNow | "Shop Now" | "ซื้อเลย" |
@@ -62,6 +64,7 @@ fun getDisplayTexts(): CampaignDetailExtractorConfig
 | | errorCampaignSoldOut | "Campaign sold out" | "สินค้าหมด" |
 | | errorCampaignNotLoaded | "Campaign not loaded" | "ไม่พบข้อมูลแคมเปญ" |
 | | errorVariantOnlyForBuy | "Variant selection only..." | "เลือกตัวเลือกได้เฉพาะ..." |
+| | errorSubVariantOnlyForBuy | "Sub-variant selection only for BUY" | "เลือกตัวเลือกย่อยได้เฉพาะแคมเปญซื้อ" |
 | | errorVariantOutOfStock | "Selected variant is out of stock" | "ตัวเลือกที่เลือกหมด" |
 | | errorSubVariantOutOfStock | "Selected sub-variant is out of stock" | "ตัวเลือกย่อยที่เลือกหมด" |
 | | errorSelectVariantFirst | "Please select a variant first" | "กรุณาเลือกตัวเลือกหลักก่อน" |
@@ -71,6 +74,12 @@ fun getDisplayTexts(): CampaignDetailExtractorConfig
 | | errorSelectAddress | "Please select a delivery address" | "กรุณาเลือกที่อยู่จัดส่ง" |
 | | errorSelectVariant | "Please select a variant" | "กรุณาเลือกตัวเลือก" |
 | | errorSelectSubVariant | "Please select a sub-variant" | "กรุณาเลือกตัวเลือกย่อย" |
+| | errorAddressNotRequired | "Address not required for this campaign" | "แคมเปญนี้ไม่ต้องใช้ที่อยู่" |
+| | errorInvalidAddress | "Invalid address" | "ที่อยู่ไม่ถูกต้อง" |
+| | errorInvalidAddressSelected | "Invalid address selected" | "ที่อยู่ที่เลือกไม่ถูกต้อง" |
+| | errorInvalidVariant | "Invalid variant" | "ตัวเลือกไม่ถูกต้อง" |
+| | errorInvalidQuantity | "Invalid quantity" | "จำนวนไม่ถูกต้อง" |
+| | errorInvalidCampaignType | "Invalid campaign type for cart" | "ประเภทแคมเปญไม่ถูกต้อง" |
 | | errorTokenRequired | "Token is required" | "กรุณาเข้าสู่ระบบ" |
 | | errorAddToCartFailed | "Failed to add to cart" | "เพิ่มในตะกร้าไม่สำเร็จ" |
 
@@ -169,7 +178,7 @@ fun onLanguageChanged(locale: String) {
 | 8          | CAMPAIGN_TYPE_INTERFACE              | Interface campaign           |
 | 9          | CAMPAIGN_TYPE_EVENT                  | Event campaign               |
 | 10         | CAMPAIGN_TYPE_MEDIA                  | Media campaign               |
-| 16         | CAMPAIGN_TYPE_NEW                    | New campaign                 |
+| 16         | CAMPAIGN_TYPE_NEWS                   | News campaign                |
 | 20         | CAMPAIGN_TYPE_DONATE                 | Donation campaign            |
 | 33         | CAMPAIGN_TYPE_MARKETPLACE_PRIVILEGE  | Marketplace privilege        |
 
@@ -202,7 +211,7 @@ Retrieves detailed information for a specific campaign. Automatically validates 
 | deviceLocale | Device locale       | O         | Int?                |
 | options      | Additional options  | O         | Map<String, String> |
 
-- Response (`CampaignDetails`) 
+- Response (`CampaignDetails`) [source](../buzzebees_sdk/src/main/java/com/buzzebees/sdk/entity/campaign/CampaignDetails.kt)  
   HTTP status: 200
 
 ### CampaignDetails Entity Fields
@@ -947,6 +956,75 @@ sealed class CampaignDetailResult {
 
 ---
 
+## getMyPoint
+
+Retrieves the current user's available points. Returns cached data if available, otherwise fetches from API.
+
+- Response: `Long?` (null if not authenticated or error)
+
+### Method Signatures
+
+```kotlin
+// Suspend
+suspend fun getMyPoint(): Long?
+
+// Callback
+fun getMyPoint(callback: (Long?) -> Unit)
+```
+
+### Usage
+
+```kotlin
+// Suspend
+val points = campaignDetailService.getMyPoint()
+points?.let {
+    println("Available points: $it")
+} ?: println("Unable to get points")
+
+// Callback
+campaignDetailService.getMyPoint { points ->
+    points?.let {
+        updatePointsDisplay(it)
+    } ?: showLoginPrompt()
+}
+```
+
+### Behavior
+
+- Returns `null` if user is not authenticated
+- Uses cached profile data if available for faster response
+- Fetches from API if cache is empty and saves to cache
+- Returns `null` on any error (network, parsing, etc.)
+
+### Example: Display Points Before Redemption
+
+```kotlin
+class RedemptionViewModel {
+    private val campaignDetailUseCase = BuzzebeesSDK.instance().campaignDetailUseCase
+    
+    fun checkPointsAndRedeem(campaignId: String, requiredPoints: Long) {
+        campaignDetailUseCase.getMyPoint { currentPoints ->
+            when {
+                currentPoints == null -> {
+                    showError("Please login to continue")
+                }
+                currentPoints < requiredPoints -> {
+                    showInsufficientPointsDialog(
+                        required = requiredPoints,
+                        available = currentPoints
+                    )
+                }
+                else -> {
+                    proceedWithRedemption(campaignId)
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
 ## Summary
 
 The CampaignDetailUseCase provides complete campaign detail management including:
@@ -957,6 +1035,7 @@ The CampaignDetailUseCase provides complete campaign detail management including
 - **Address Selection**: Delivery address management for shipped campaigns
 - **Quantity Management**: Quantity selection with stock validation for BUY and DONATE campaigns
 - **Redemption**: Unified redemption flow handling different campaign types with appropriate next step guidance
+- **Points Query**: `getMyPoint()` method for checking user's available points with caching
 
 **Key Features:**
 - Easy localization - just change config at startup
